@@ -114,7 +114,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
         </div>
         <div className="flex-1 md:max-w-[200px]">
           <Select onValueChange={handleTypeChange} value={selectedType}>
-            <SelectTrigger className="w-full bg-card focus:border-primary">
+            <SelectTrigger className="w-full bg-card focus:border-primary capitalize">
               <ListFilter className="h-5 w-5 text-muted-foreground mr-2" />
               <SelectValue placeholder="Filter by type..." />
             </SelectTrigger>
