@@ -63,8 +63,8 @@ export function PokemonSelector({ pokemonList, selectedPokemon, onSelectPokemon,
                 <CommandItem
                   key={pokemon.name}
                   value={pokemon.name}
-                  onSelect={(currentValue) => {
-                    handleSelect(currentValue);
+                  onSelect={() => {
+                    handleSelect(pokemon.name);
                   }}
                 >
                   <Check className={cn('mr-2 h-4 w-4', selectedPokemon?.name === pokemon.name ? 'opacity-100' : 'opacity-0')} />
