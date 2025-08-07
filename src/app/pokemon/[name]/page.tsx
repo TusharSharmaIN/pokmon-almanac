@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ChevronRight, ArrowUp } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
@@ -71,14 +71,8 @@ const EvolutionNodeDisplay = ({ node, level = 0 }: { node: EvolutionNode, level?
           <div className="relative">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-24 gap-y-16">
               {node.evolves_to.map((nextNode, index) => {
-                const angle = (index / node.evolves_to.length) * 2 * Math.PI - (Math.PI / 2);
-                const radius = 200; 
-                const x = Math.cos(angle) * radius;
-                const y = Math.sin(angle) * radius;
-
                 return (
                   <div key={nextNode.species.name} className="relative flex flex-col items-center justify-center">
-                    <ArrowUp className="w-8 h-8 text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ transform: `translate(-50%, -50%) rotate(${angle + Math.PI/2}rad)  translateY(-60px)`}}/>
                     <EvolutionNodeDisplay node={nextNode} level={level + 1} />
                   </div>
                 );
@@ -103,7 +97,7 @@ const EvolutionNodeDisplay = ({ node, level = 0 }: { node: EvolutionNode, level?
 
         {hasEvolutions && (
             <>
-                <ChevronRight className="w-8 h-8 sm:w-12 sm:h-12 text-muted-foreground shrink-0 mx-4" />
+                <div className="w-8 h-8 sm:w-12 sm:h-12 shrink-0 mx-4" />
                 <div className="flex flex-col gap-4">
                     {node.evolves_to.map((nextNode) => (
                         <EvolutionNodeDisplay key={nextNode.species.name} node={nextNode} level={level + 1} />
