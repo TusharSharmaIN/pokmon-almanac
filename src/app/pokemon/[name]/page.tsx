@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { getPokemon, getPokemonSpecies, getEvolutionChain, EvolutionNode, getPokemonIdFromUrl } from '@/lib/pokemon';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
