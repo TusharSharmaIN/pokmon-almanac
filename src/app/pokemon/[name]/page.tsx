@@ -92,7 +92,7 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
     const description =
         species.flavor_text_entries.find((entry) => entry.language.name === 'en')?.flavor_text.replace(/[\\n\\f]/g, ' ') || 'No description available.';
 
-    const imageUrl = pokemon.sprites.other.dream_world.front_default || pokemon.sprites.other['official-artwork'].front_default;
+    const imageUrl = pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.other.dream_world.front_default;
 
     return (
         <div className="flex min-h-screen flex-col">

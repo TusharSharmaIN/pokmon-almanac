@@ -45,7 +45,7 @@ const EvolutionPokemon = ({ pokemon, isCurrent }: { pokemon: EnrichedEvolutionNo
   const typeColor = POKEMON_TYPE_COLORS_HSL[primaryType]?.bg || 'hsl(var(--primary))';
   
   const hoverBgColor = typeColor.replace('hsl(', 'hsla(').replace(')', ', 0.2)');
-  const imageUrl = pokemon.sprites.other.dream_world.front_default || pokemon.sprites.other['official-artwork'].front_default;
+  const imageUrl = pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.other.dream_world.front_default;
 
   return (
     <Link href={`/pokemon/${pokemon.name}`} className="z-10" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
