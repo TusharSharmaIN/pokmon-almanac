@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -25,11 +26,17 @@ export function PokemonSelector({ pokemonList, selectedPokemon, onSelectPokemon,
 
   const handleSelect = async (name: string) => {
     if (!name) {
-      onSelectPokemon(null);
-      return;
+        onSelectPokemon(null);
+        setOpen(false);
+        return;
     }
-    const data = await getPokemon(name);
-    onSelectPokemon(data);
+
+    if (selectedPokemon?.name === name) {
+        onSelectPokemon(null);
+    } else {
+        const data = await getPokemon(name);
+        onSelectPokemon(data);
+    }
     setOpen(false);
   };
 
