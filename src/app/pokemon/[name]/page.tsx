@@ -9,6 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import ReactFlow, { Elements, isNode, Position } from 'react-flow-renderer';
+
 
 const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
   normal: { bg: 'hsl(0, 0%, 63%)', text: 'hsl(0, 0%, 100%)' },
@@ -66,61 +68,127 @@ const EvolutionPokemon = ({ name, url }: { name: string; url: string }) => {
   );
 };
 
+const CustomNode = ({ data }: { data: { label: React.ReactNode } }) => {
+  return <>{data.label}</>;
+};
 
-const EvolutionNodeDisplay = ({ node }: { node: EvolutionNode }) => {
-  const hasEvolutions = node.evolves_to.length > 0;
-  const isBranching = node.evolves_to.length > 1;
+const nodeTypes = {
+  custom: CustomNode,
+};
 
-  if (isBranching) {
-    const angleStep = 360 / node.evolves_to.length;
-    return (
-      <div className="flex items-center justify-center">
-        <div className="relative w-96 h-96 flex items-center justify-center">
-          <EvolutionPokemon name={node.species.name} url={node.species.url} />
-          {node.evolves_to.map((nextNode, index) => {
-            const angle = angleStep * index - 90; // -90 to start from top
-            const radius = 180; // pixels
-            const x = radius * Math.cos((angle * Math.PI) / 180);
-            const y = radius * Math.sin((angle * Math.PI) / 180);
-            return (
-              <React.Fragment key={nextNode.species.name}>
-                <div
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary"
-                  style={{
-                    transform: `translate(${x * 0.55}px, ${y * 0.55}px) rotate(${angle + 90}deg)`,
-                  }}
-                >
-                  <ArrowRight size={32} />
-                </div>
-                <div
-                  className="absolute top-1/2 left-1/2"
-                  style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }}
-                >
-                  <EvolutionNodeDisplay node={nextNode} />
-                </div>
-              </React.Fragment>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
+const EvolutionGraph = ({ evolutionChain }: { evolutionChain: EvolutionNode }) => {
+  const [elements, setElements] = React.useState<Elements>([]);
+
+  React.useEffect(() => {
+    const getElements = (node: EvolutionNode, x = 0, y = 0, parentId?: string): Elements => {
+      const id = node.species.name;
+      const newElements: Elements = [];
+      const isBranching = node.evolves_to.length > 1;
+
+      const currentNode = {
+        id,
+        type: 'custom',
+        data: { label: <EvolutionPokemon name={node.species.name} url={node.species.url} /> },
+        position: { x, y },
+        sourcePosition: isBranching ? Position.Right : Position.Bottom,
+        targetPosition: isBranching ? Position.Left : Position.Top,
+      };
+      newElements.push(currentNode);
+
+      if (parentId) {
+        newElements.push({
+          id: `e${parentId}-${id}`,
+          source: parentId,
+          target: id,
+          animated: true,
+          arrowHeadType: 'arrowclosed',
+        });
+      }
+
+      if (isBranching) {
+        const angleStep = 360 / node.evolves_to.length;
+        const radius = 300;
+        node.evolves_to.forEach((evolution, index) => {
+          const angle = angleStep * index;
+          const newX = x + radius * Math.cos((angle * Math.PI) / 180);
+          const newY = y + radius * Math.sin((angle * Math.PI) / 180);
+          newElements.push(...getElements(evolution, newX, newY, id));
+        });
+      } else if (node.evolves_to.length === 1) {
+        newElements.push(...getElements(node.evolves_to[0], x, y + 250, id));
+      }
+
+      return newElements;
+    };
+
+    let initialElements = getElements(evolutionChain);
+
+    if (initialElements.length > 1 && isNode(initialElements[0])) {
+      const firstNode = initialElements[0];
+      if (firstNode.data.label.props.name === evolutionChain.species.name && evolutionChain.evolves_to.length > 1) {
+          // Center the root node for branching evolutions
+          const nodeElements = initialElements.filter(isNode);
+          const xCoords = nodeElements.map(n => n.position.x);
+          const yCoords = nodeElements.map(n => n.position.y);
+          const minX = Math.min(...xCoords);
+          const maxX = Math.max(...xCoords);
+          const minY = Math.min(...yCoords);
+          const maxY = Math.max(...yCoords);
+          const centerX = (minX + maxX) / 2;
+          const centerY = (minY + maxY) / 2;
+          firstNode.position = { x: centerX, y: centerY };
+
+      } else { // Sequential layout
+        initialElements = [];
+        let currentX = 0;
+        const yPos = 100;
+        let parentId: string | undefined = undefined;
+        let currentNodeForLayout: EvolutionNode | undefined = evolutionChain;
+        while(currentNodeForLayout) {
+            const id = currentNodeForLayout.species.name;
+            const node = {
+                id,
+                type: 'custom',
+                data: { label: <EvolutionPokemon name={id} url={currentNodeForLayout.species.url} /> },
+                position: { x: currentX, y: yPos },
+                sourcePosition: Position.Right,
+                targetPosition: Position.Left,
+            };
+            initialElements.push(node);
+            if (parentId) {
+                 initialElements.push({
+                    id: `e${parentId}-${id}`,
+                    source: parentId,
+                    target: id,
+                    animated: true,
+                    arrowHeadType: 'arrowclosed',
+                });
+            }
+            parentId = id;
+            currentX += 300;
+            currentNodeForLayout = currentNodeForLayout.evolves_to[0];
+        }
+      }
+    }
+
+
+    setElements(initialElements);
+  }, [evolutionChain]);
 
   return (
-    <div className="flex items-center justify-center">
-      <EvolutionPokemon name={node.species.name} url={node.species.url} />
-      {hasEvolutions && (
-        <>
-          <div className="w-8 sm:w-16 mx-2 sm:mx-4 flex justify-center text-primary">
-            <ArrowRight size={32} />
-          </div>
-          <div className="flex flex-col gap-4">
-            {node.evolves_to.map((nextNode) => (
-              <EvolutionNodeDisplay key={nextNode.species.name} node={nextNode} />
-            ))}
-          </div>
-        </>
-      )}
+    <div style={{ height: 600 }}>
+       <ReactFlow
+        elements={elements}
+        nodeTypes={nodeTypes}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable={false}
+        zoomOnScroll={false}
+        panOnScroll={true}
+        zoomOnDoubleClick={false}
+        panOnDrag={true}
+        >
+        </ReactFlow>
     </div>
   );
 };
@@ -196,12 +264,10 @@ export default async function PokemonPage({ params }: { params: { name:string } 
             </div>
 
             {evolutionChain && evolutionChain.chain.evolves_to.length > 0 && (
-              <div className="p-4 md:p-8 border-t overflow-x-auto">
-                <h2 className="text-3xl font-bold mb-12 font-headline text-center">Evolution Chain</h2>
-                <div className="flex items-center justify-center min-w-[500px] py-16">
-                  <EvolutionNodeDisplay node={evolutionChain.chain} />
-                </div>
-              </div>
+               <div className="p-4 md:p-8 border-t">
+                 <h2 className="text-3xl font-bold mb-4 font-headline text-center">Evolution Chain</h2>
+                 <EvolutionGraph evolutionChain={evolutionChain.chain} />
+               </div>
             )}
           </Card>
         </div>
