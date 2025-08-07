@@ -24,19 +24,16 @@ interface PokemonSelectorProps {
 export function PokemonSelector({ pokemonList, selectedPokemon, onSelectPokemon, disabled, isLoading }: PokemonSelectorProps) {
   const [open, setOpen] = React.useState(false);
 
-  const handleSelect = async (name: string) => {
-    if (!name) {
-        onSelectPokemon(null);
+  const handleSelect = async (currentValue: string) => {
+    // If the selected pokemon is already the current value, do nothing, just close.
+    if (selectedPokemon?.name === currentValue) {
         setOpen(false);
         return;
     }
-
-    if (selectedPokemon?.name === name) {
-        onSelectPokemon(null);
-    } else {
-        const data = await getPokemon(name);
-        onSelectPokemon(data);
-    }
+    
+    // Otherwise, fetch the new pokemon data.
+    const data = await getPokemon(currentValue);
+    onSelectPokemon(data);
     setOpen(false);
   };
 
