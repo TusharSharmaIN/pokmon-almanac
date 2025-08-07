@@ -39,72 +39,65 @@ const EvolutionGraph = ({ evolutionChain }: EvolutionGraphProps) => {
     const [elements, setElements] = React.useState<Elements>([]);
 
     React.useEffect(() => {
-        const getElements = (node: EvolutionNode, x = 0, y = 0, parentId?: string): Elements => {
-            const id = node.species.name;
-            const newElements: Elements = [];
+        const getElements = (node: EvolutionNode): Elements => {
+            const elements: Elements = [];
             const isBranching = node.evolves_to.length > 1;
 
-            const currentNode = {
-                id,
-                type: 'custom',
-                data: { label: <EvolutionPokemon name={node.species.name} url={node.species.url} /> },
-                position: { x, y },
-                sourcePosition: isBranching ? Position.Right : Position.Bottom,
-                targetPosition: isBranching ? Position.Left : Position.Top,
-            };
-            newElements.push(currentNode);
-
-            if (parentId) {
-                newElements.push({
-                    id: `e${parentId}-${id}`,
-                    source: parentId,
-                    target: id,
-                    animated: true,
-                    markerEnd: { type: MarkerType.ArrowClosed },
+            const processNode = (currentNode: EvolutionNode, x: number, y: number, parentId?: string) => {
+                const id = currentNode.species.name;
+                
+                elements.push({
+                    id,
+                    type: 'custom',
+                    data: { label: <EvolutionPokemon name={currentNode.species.name} url={currentNode.species.url} /> },
+                    position: { x, y },
+                    sourcePosition: Position.Bottom,
+                    targetPosition: Position.Top,
                 });
-            }
 
+                if (parentId) {
+                    elements.push({
+                        id: `e${parentId}-${id}`,
+                        source: parentId,
+                        target: id,
+                        animated: true,
+                        markerEnd: { type: MarkerType.ArrowClosed },
+                    });
+                }
+            };
+            
             if (isBranching) {
-                 const radius = 300;
-                 const angleStep = 360 / node.evolves_to.length;
+                // Special layout for branching evolutions like Eevee
+                const centerX = 350;
+                const centerY = 150;
+                const radius = 300;
+                
+                // Root node
+                processNode(node, centerX, centerY);
 
-                 node.evolves_to.forEach((evolution, index) => {
-                    const angle = angleStep * index - 90; // Start from top
-                    const newX = x + radius * Math.cos((angle * Math.PI) / 180);
-                    const newY = y + radius * Math.sin((angle * Math.PI) / 180);
-                    newElements.push(...getElements(evolution, newX, newY, id));
-                 });
+                const angleStep = (2 * Math.PI) / node.evolves_to.length;
+                node.evolves_to.forEach((evo, index) => {
+                    const angle = angleStep * index - (Math.PI / 2); // Start from the top
+                    const x = centerX + radius * Math.cos(angle);
+                    const y = centerY + radius * Math.sin(angle);
+                    processNode(evo, x, y, node.species.name);
+                });
 
-            } else if (node.evolves_to.length === 1) {
-                newElements.push(...getElements(node.evolves_to[0], x, y + 250, id));
+            } else {
+                 // Standard vertical layout for linear evolutions
+                const traverse = (currentNode: EvolutionNode, x: number, y: number, parentId?: string) => {
+                    processNode(currentNode, x, y, parentId);
+                    if (currentNode.evolves_to.length > 0) {
+                        traverse(currentNode.evolves_to[0], x, y + 250, currentNode.species.name);
+                    }
+                }
+                traverse(node, 350, 0);
             }
 
-            return newElements;
+            return elements;
         };
 
-        let initialElements = getElements(evolutionChain);
-        
-        // Center the root node for branching evolutions
-        if(isNode(initialElements[0]) && evolutionChain.evolves_to.length > 1) {
-            const rootNode = initialElements.find(el => isNode(el) && el.id === evolutionChain.species.name);
-            const childNodes = evolutionChain.evolves_to.map(evo => initialElements.find(el => isNode(el) && el.id === evo.species.name)).filter(n => n && isNode(n));
-            
-            if(rootNode && isNode(rootNode) && childNodes.length > 0) {
-                 const xCoords = childNodes.map(n => isNode(n) ? n.position.x : 0);
-                 const yCoords = childNodes.map(n => isNode(n) ? n.position.y : 0);
-                 const minX = Math.min(...xCoords);
-                 const maxX = Math.max(...xCoords);
-                 const minY = Math.min(...yCoords);
-                 const maxY = Math.max(...yCoords);
-
-                 rootNode.position = {
-                     x: (minX + maxX) / 2,
-                     y: (minY + maxY) / 2
-                 };
-            }
-        }
-
-        setElements(initialElements);
+        setElements(getElements(evolutionChain));
     }, [evolutionChain]);
 
     return (
