@@ -5,6 +5,7 @@ import { EvolutionNode, getPokemonIdFromUrl } from '@/lib/pokemon';
 import Image from 'next/image';
 import Link from 'next/link';
 import ReactFlow, { Elements, isNode, Position, MarkerType } from 'react-flow-renderer';
+import 'react-flow-renderer/dist/style.css';
 
 const EvolutionPokemon = ({ name, url }: { name: string; url: string }) => {
   const id = getPokemonIdFromUrl(url);
@@ -59,7 +60,7 @@ const EvolutionGraph = ({ evolutionChain }: EvolutionGraphProps) => {
                     source: parentId,
                     target: id,
                     animated: true,
-                    markerEnd: MarkerType.ArrowClosed,
+                    markerEnd: { type: MarkerType.ArrowClosed },
                 });
             }
 
