@@ -90,7 +90,7 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
     const nextPokemonData = await getPokemon(pokemon.id + 1);
 
     const description =
-        species.flavor_text_entries.find((entry) => entry.language.name === 'en')?.flavor_text.replace(/[\\n\\f]/g, ' ') || 'No description available.';
+        species.flavor_text_entries.find((entry) => entry.language.name === 'en')?.flavor_text.replace(/[\n\f]/g, ' ') || 'No description available.';
 
     const imageUrl = pokemon.sprites.other['official-artwork'].front_default;
     const shinyImageUrl = pokemon.sprites.other['official-artwork'].front_shiny;
