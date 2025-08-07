@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronRight, ArrowUp } from 'lucide-react';
 import Link from 'next/link';
 
 const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
@@ -56,47 +56,61 @@ const EvolutionNodeDisplay = ({ node, level = 0 }: { node: EvolutionNode, level?
   const hasEvolutions = node.evolves_to.length > 0;
   const isBranching = node.evolves_to.length > 1;
 
-  return (
-    <div className="flex flex-col items-center justify-center">
-      <div className={`flex items-center ${isBranching ? 'flex-col' : 'flex-row'}`}>
-        <div className="flex items-center">
-          <Link href={`/pokemon/${node.species.name}`} className="z-10">
-            <div className="flex flex-col items-center gap-2 group transform transition-transform duration-300 hover:scale-105">
-              <div className="bg-muted rounded-full p-2 sm:p-4 w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center transition-all group-hover:bg-primary/20">
-                <Image src={imageUrl} alt={node.species.name} width={96} height={96} className="object-contain"/>
-              </div>
-              <p className="capitalize font-headline font-semibold">{node.species.name}</p>
+  if (isBranching) {
+    return (
+      <div className="flex flex-col items-center">
+        <Link href={`/pokemon/${node.species.name}`} className="z-10">
+          <div className="flex flex-col items-center gap-2 group transform transition-transform duration-300 hover:scale-105">
+            <div className="bg-muted rounded-full p-4 w-32 h-32 flex items-center justify-center transition-all group-hover:bg-primary/20">
+              <Image src={imageUrl} alt={node.species.name} width={96} height={96} className="object-contain" />
             </div>
-          </Link>
+            <p className="capitalize font-headline font-semibold">{node.species.name}</p>
+          </div>
+        </Link>
+        <div className="mt-8 w-full flex justify-center">
+          <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-24 gap-y-16">
+              {node.evolves_to.map((nextNode, index) => {
+                const angle = (index / node.evolves_to.length) * 2 * Math.PI - (Math.PI / 2);
+                const radius = 200; 
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
 
-          {hasEvolutions && !isBranching && (
-            <ChevronRight className="w-8 h-8 sm:w-12 sm:h-12 text-muted-foreground shrink-0 mx-4" />
-          )}
+                return (
+                  <div key={nextNode.species.name} className="relative flex flex-col items-center justify-center">
+                    <ArrowUp className="w-8 h-8 text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ transform: `translate(-50%, -50%) rotate(${angle + Math.PI/2}rad)  translateY(-60px)`}}/>
+                    <EvolutionNodeDisplay node={nextNode} level={level + 1} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-
-        {hasEvolutions && !isBranching && (
-            <div className="flex flex-col gap-4">
-            {node.evolves_to.map((nextNode) => (
-                <EvolutionNodeDisplay key={nextNode.species.name} node={nextNode} level={level + 1} />
-            ))}
-            </div>
-        )}
       </div>
+    );
+  }
 
-      {isBranching && (
-        <div className="mt-8">
-            <div className="relative">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-16 bg-muted-foreground/50 rotate-0"></div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-16 gap-y-8 mt-8">
-                {node.evolves_to.map((nextNode) => (
-                    <div key={nextNode.species.name} className="flex flex-col items-center">
-                      <EvolutionNodeDisplay node={nextNode} level={level + 1} />
-                    </div>
-                ))}
+  return (
+    <div className="flex items-center justify-center">
+        <Link href={`/pokemon/${node.species.name}`} className="z-10">
+            <div className="flex flex-col items-center gap-2 group transform transition-transform duration-300 hover:scale-105">
+                <div className="bg-muted rounded-full p-2 sm:p-4 w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center transition-all group-hover:bg-primary/20">
+                    <Image src={imageUrl} alt={node.species.name} width={96} height={96} className="object-contain"/>
                 </div>
+                <p className="capitalize font-headline font-semibold">{node.species.name}</p>
             </div>
-        </div>
-      )}
+        </Link>
+
+        {hasEvolutions && (
+            <>
+                <ChevronRight className="w-8 h-8 sm:w-12 sm:h-12 text-muted-foreground shrink-0 mx-4" />
+                <div className="flex flex-col gap-4">
+                    {node.evolves_to.map((nextNode) => (
+                        <EvolutionNodeDisplay key={nextNode.species.name} node={nextNode} level={level + 1} />
+                    ))}
+                </div>
+            </>
+        )}
     </div>
   );
 };
@@ -172,10 +186,10 @@ export default async function PokemonPage({ params }: { params: { name: string }
               </div>
             </div>
 
-            {evolutionChain.chain.evolves_to.length > 0 && (
-              <div className="p-4 md:p-8 border-t">
+            {evolutionChain && evolutionChain.chain.evolves_to.length > 0 && (
+              <div className="p-4 md:p-8 border-t overflow-x-auto">
                 <h2 className="text-3xl font-bold mb-12 font-headline text-center">Evolution Chain</h2>
-                <div className="flex items-start justify-center">
+                <div className="flex items-start justify-center min-w-[500px]">
                   <EvolutionNodeDisplay node={evolutionChain.chain} />
                 </div>
               </div>
