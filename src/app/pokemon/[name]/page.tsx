@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ChevronRight, CornerDownRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
@@ -49,30 +49,53 @@ const Stat = ({ name, value }: { name: string; value: number }) => (
   </div>
 );
 
-const EvolutionNodeDisplay = ({ node }: { node: EvolutionNode }) => {
+const EvolutionNodeDisplay = ({ node, level = 0 }: { node: EvolutionNode, level?: number }) => {
   const id = getPokemonIdFromUrl(node.species.url);
   const imageUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
   
-  return (
-    <div className="flex items-center gap-4">
-      <Link href={`/pokemon/${node.species.name}`}>
-        <div className="flex flex-col items-center gap-2 group transform transition-transform duration-300 hover:scale-105">
-          <div className="bg-muted rounded-full p-2 sm:p-4 w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center transition-all group-hover:bg-primary/20">
-            <Image src={imageUrl} alt={node.species.name} width={96} height={96} />
-          </div>
-          <p className="capitalize font-headline font-semibold">{node.species.name}</p>
-        </div>
-      </Link>
+  const hasEvolutions = node.evolves_to.length > 0;
+  const isBranching = node.evolves_to.length > 1;
 
-      {node.evolves_to.length > 0 && (
-        <>
-          <ChevronRight className="w-8 h-8 sm:w-12 sm:h-12 text-muted-foreground shrink-0" />
-          <div className="flex flex-col gap-4">
-            {node.evolves_to.map((nextNode, index) => (
-              <EvolutionNodeDisplay key={nextNode.species.name} node={nextNode} />
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <div className={`flex items-center ${isBranching ? 'flex-col' : 'flex-row'}`}>
+        <div className="flex items-center">
+          <Link href={`/pokemon/${node.species.name}`} className="z-10">
+            <div className="flex flex-col items-center gap-2 group transform transition-transform duration-300 hover:scale-105">
+              <div className="bg-muted rounded-full p-2 sm:p-4 w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center transition-all group-hover:bg-primary/20">
+                <Image src={imageUrl} alt={node.species.name} width={96} height={96} className="object-contain"/>
+              </div>
+              <p className="capitalize font-headline font-semibold">{node.species.name}</p>
+            </div>
+          </Link>
+
+          {hasEvolutions && !isBranching && (
+            <ChevronRight className="w-8 h-8 sm:w-12 sm:h-12 text-muted-foreground shrink-0 mx-4" />
+          )}
+        </div>
+
+        {hasEvolutions && !isBranching && (
+            <div className="flex flex-col gap-4">
+            {node.evolves_to.map((nextNode) => (
+                <EvolutionNodeDisplay key={nextNode.species.name} node={nextNode} level={level + 1} />
             ))}
-          </div>
-        </>
+            </div>
+        )}
+      </div>
+
+      {isBranching && (
+        <div className="mt-8">
+            <div className="relative">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-16 bg-muted-foreground/50 rotate-0"></div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-16 gap-y-8 mt-8">
+                {node.evolves_to.map((nextNode) => (
+                    <div key={nextNode.species.name} className="flex flex-col items-center">
+                      <EvolutionNodeDisplay node={nextNode} level={level + 1} />
+                    </div>
+                ))}
+                </div>
+            </div>
+        </div>
       )}
     </div>
   );
@@ -149,12 +172,14 @@ export default async function PokemonPage({ params }: { params: { name: string }
               </div>
             </div>
 
-            <div className="p-4 md:p-8 border-t">
-              <h2 className="text-3xl font-bold mb-6 font-headline text-center">Evolution Chain</h2>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <EvolutionNodeDisplay node={evolutionChain.chain} />
+            {evolutionChain.chain.evolves_to.length > 0 && (
+              <div className="p-4 md:p-8 border-t">
+                <h2 className="text-3xl font-bold mb-12 font-headline text-center">Evolution Chain</h2>
+                <div className="flex items-start justify-center">
+                  <EvolutionNodeDisplay node={evolutionChain.chain} />
+                </div>
               </div>
-            </div>
+            )}
           </Card>
         </div>
       </main>
