@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { getPokemon, getPokemonSpecies, getEvolutionChain, EvolutionNode, getPokemonIdFromUrl, Pokemon, PokemonSpecies, EvolutionChain as EvolutionChainType } from '@/lib/pokemon';
+import { getPokemon, getPokemonSpecies, getEvolutionChain, EvolutionNode, getPokemonIdFromUrl, Pokemon, PokemonSpecies, EvolutionChain as EvolutionChainType, EnrichedEvolutionNode } from '@/lib/pokemon';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Header } from '@/components/header';
@@ -52,6 +52,21 @@ const Stat = ({ name, value }: { name: string; value: number }) => (
   </div>
 );
 
+// This function recursively fetches pokemon data for the evolution chain
+async function enrichEvolutionChain(node: EvolutionNode): Promise<EnrichedEvolutionNode | null> {
+    const pokemon = await getPokemon(node.species.name);
+    if (!pokemon) return null;
+  
+    const evolves_to = await Promise.all(
+      node.evolves_to.map(async (evoNode) => enrichEvolutionChain(evoNode))
+    );
+  
+    return {
+      pokemon,
+      evolves_to: evolves_to.filter((evo): evo is EnrichedEvolutionNode => evo !== null),
+    };
+  }
+
 interface PokemonPageProps {
   params: { name: string };
 }
@@ -65,6 +80,11 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
     const species = await getPokemonSpecies(pokemon.id);
     const evolutionChain = species.evolution_chain.url ? await getEvolutionChain(species.evolution_chain.url) : null;
     
+    let enrichedEvolutionChain: EnrichedEvolutionNode | null = null;
+    if (evolutionChain) {
+        enrichedEvolutionChain = await enrichEvolutionChain(evolutionChain.chain);
+    }
+
     // Fetch previous and next pokemon names on the server
     const prevPokemonData = pokemon.id > 1 ? await getPokemon(pokemon.id - 1) : null;
     const nextPokemonData = await getPokemon(pokemon.id + 1);
@@ -128,10 +148,10 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
                             </div>
                         </div>
 
-                        {evolutionChain && evolutionChain.chain.evolves_to.length > 0 && (
+                        {enrichedEvolutionChain && (
                             <div className="p-4 md:p-8 border-t">
                                 <h2 className="text-3xl font-bold mb-4 font-headline text-center">Evolution Chain</h2>
-                                <PokemonPageClient evolutionChain={evolutionChain.chain} />
+                                <PokemonPageClient enrichedEvolutionChain={enrichedEvolutionChain} />
                             </div>
                         )}
                     </Card>

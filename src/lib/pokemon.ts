@@ -92,6 +92,11 @@ export interface EvolutionNode {
   evolves_to: EvolutionNode[];
 }
 
+export interface EnrichedEvolutionNode {
+  pokemon: Pokemon;
+  evolves_to: EnrichedEvolutionNode[];
+}
+
 export interface EvolutionChain {
   id: number;
   chain: EvolutionNode;
