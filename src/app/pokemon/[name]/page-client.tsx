@@ -5,39 +5,8 @@ import { EnrichedEvolutionNode } from '@/lib/pokemon';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-
-// This is copied from the main page, we should refactor it into a shared component
-const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
-    normal: { bg: 'hsl(0, 0%, 63%)', text: 'hsl(0, 0%, 100%)' },
-    fire: { bg: 'hsl(13, 94%, 53%)', text: 'hsl(0, 0%, 100%)' },
-    water: { bg: 'hsl(211, 79%, 56%)', text: 'hsl(0, 0%, 100%)' },
-    electric: { bg: 'hsl(52, 95%, 58%)', text: 'hsl(52, 100%, 10%)' },
-    grass: { bg: 'hsl(120, 57%, 49%)', text: 'hsl(0, 0%, 100%)' },
-    ice: { bg: 'hsl(180, 52%, 82%)', text: 'hsl(180, 100%, 10%)' },
-    fighting: { bg: 'hsl(0, 75%, 43%)', text: 'hsl(0, 0%, 100%)' },
-    poison: { bg: 'hsl(279, 64%, 48%)', text: 'hsl(0, 0%, 100%)' },
-    ground: { bg: 'hsl(45, 78%, 51%)', text: 'hsl(0, 0%, 100%)' },
-    flying: { bg: 'hsl(227, 59%, 67%)', text: 'hsl(0, 0%, 100%)' },
-    psychic: { bg: 'hsl(340, 82%, 61%)', text: 'hsl(0, 0%, 100%)' },
-    bug: { bg: 'hsl(84, 76%, 51%)', text: 'hsl(84, 100%, 10%)' },
-    rock: { bg: 'hsl(45, 61%, 41%)', text: 'hsl(0, 0%, 100%)' },
-    ghost: { bg: 'hsl(275, 74%, 35%)', text: 'hsl(0, 0%, 100%)' },
-    dragon: { bg: 'hsl(254, 84%, 44%)', text: 'hsl(0, 0%, 100%)' },
-    dark: { bg: 'hsl(0, 0%, 44%)', text: 'hsl(0, 0%, 100%)' },
-    steel: { bg: 'hsl(210, 14%, 73%)', text: 'hsl(210, 100%, 10%)' },
-    fairy: { bg: 'hsl(330, 66%, 74%)', text: 'hsl(330, 100%, 10%)' },
-  };
-  
-  const TypeBadge = ({ typeName }: { typeName: string }) => {
-    const colors = POKEMON_TYPE_COLORS_HSL[typeName] || { bg: 'gray', text: 'white' };
-    return (
-      <Badge style={{ backgroundColor: colors.bg, color: colors.text }} className="capitalize text-xs px-2 py-0.5 border-none">
-        {typeName}
-      </Badge>
-    );
-  };
+import { TypeBadge, POKEMON_TYPE_COLORS_HSL } from '@/components/type-badge';
 
 const EvolutionPokemon = ({ pokemon, isCurrent }: { pokemon: EnrichedEvolutionNode['pokemon'], isCurrent: boolean }) => {
   const [hover, setHover] = React.useState(false);
@@ -73,20 +42,17 @@ const EvolutionBranch = ({ node, currentPokemonName }: { node: EnrichedEvolution
       <EvolutionPokemon pokemon={node.pokemon} isCurrent={node.pokemon.name === currentPokemonName} />
       {node.evolves_to.length > 0 && <ArrowRight className="h-8 w-8 text-muted-foreground shrink-0" />}
       
-      {hasMultipleEvolutions ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+      {node.evolves_to.length > 0 && (
+        <div 
+            className={cn(
+                "flex gap-4 md:gap-8",
+                hasMultipleEvolutions ? "flex-col sm:flex-row" : "flex-col"
+            )}
+        >
           {node.evolves_to.map((evo) => (
             <EvolutionBranch key={evo.pokemon.name} node={evo} currentPokemonName={currentPokemonName} />
           ))}
         </div>
-      ) : (
-        node.evolves_to.length > 0 && (
-          <div className="flex flex-col gap-4">
-            {node.evolves_to.map((evo) => (
-              <EvolutionBranch key={evo.pokemon.name} node={evo} currentPokemonName={currentPokemonName} />
-            ))}
-          </div>
-        )
       )}
     </div>
   );
