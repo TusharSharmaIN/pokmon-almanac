@@ -68,7 +68,7 @@ export default function BattlePage() {
     <div className="flex-1 flex flex-col items-center justify-center p-4 border rounded-lg min-h-64 bg-muted/50">
       {pokemon ? (
         <>
-          <Image src={pokemon.sprites.other['official-artwork'].front_default} alt={pokemon.name} width={128} height={128} />
+          <Image src={pokemon.sprites.other.dream_world.front_default || pokemon.sprites.other['official-artwork'].front_default} alt={pokemon.name} width={128} height={128} />
           <h3 className="text-xl font-bold capitalize font-headline mt-2">{pokemon.name}</h3>
         </>
       ) : (

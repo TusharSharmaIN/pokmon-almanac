@@ -47,7 +47,7 @@ export function PokemonSelector({ pokemonList, selectedPokemon, onSelectPokemon,
         <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between h-14" disabled={disabled}>
           {selectedPokemon ? (
             <div className="flex items-center gap-2">
-              <Image src={selectedPokemon.sprites.other['official-artwork'].front_default} alt={selectedPokemon.name} width={40} height={40} />
+              <Image src={selectedPokemon.sprites.other.dream_world.front_default || selectedPokemon.sprites.other['official-artwork'].front_default} alt={selectedPokemon.name} width={40} height={40} />
               <span className="capitalize">{selectedPokemon.name}</span>
             </div>
           ) : (

@@ -45,6 +45,7 @@ const EvolutionPokemon = ({ pokemon, isCurrent }: { pokemon: EnrichedEvolutionNo
   const typeColor = POKEMON_TYPE_COLORS_HSL[primaryType]?.bg || 'hsl(var(--primary))';
   
   const hoverBgColor = typeColor.replace('hsl(', 'hsla(').replace(')', ', 0.2)');
+  const imageUrl = pokemon.sprites.other.dream_world.front_default || pokemon.sprites.other['official-artwork'].front_default;
 
   return (
     <Link href={`/pokemon/${pokemon.name}`} className="z-10" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
@@ -53,7 +54,7 @@ const EvolutionPokemon = ({ pokemon, isCurrent }: { pokemon: EnrichedEvolutionNo
           className={cn("bg-muted rounded-full p-2 sm:p-4 w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center transition-all", { 'border-4 border-primary/50 bg-primary/10': isCurrent })}
           style={{ backgroundColor: hover || isCurrent ? hoverBgColor : undefined }}
         >
-          <Image src={pokemon.sprites.other['official-artwork'].front_default} alt={pokemon.name} width={96} height={96} className="object-contain" />
+          <Image src={imageUrl} alt={pokemon.name} width={96} height={96} className="object-contain" />
         </div>
         <p className="capitalize font-headline font-semibold">{pokemon.name}</p>
         <div className="flex gap-1">

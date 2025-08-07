@@ -92,6 +92,8 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
     const description =
         species.flavor_text_entries.find((entry) => entry.language.name === 'en')?.flavor_text.replace(/[\\n\\f]/g, ' ') || 'No description available.';
 
+    const imageUrl = pokemon.sprites.other.dream_world.front_default || pokemon.sprites.other['official-artwork'].front_default;
+
     return (
         <div className="flex min-h-screen flex-col">
             <Header />
@@ -122,7 +124,7 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
                         <div className="grid md:grid-cols-2 gap-4 md:gap-8 p-4 md:p-8">
                             <div className="flex flex-col items-center">
                                 <div className="bg-muted rounded-lg aspect-square w-full max-w-sm flex items-center justify-center p-8">
-                                <Image src={pokemon.sprites.other['official-artwork'].front_default} alt={pokemon.name} width={400} height={400} className="object-contain" priority />
+                                <Image src={imageUrl} alt={pokemon.name} width={400} height={400} className="object-contain" priority />
                                 </div>
                             </div>
                             <div className="space-y-4">
