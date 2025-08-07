@@ -1,0 +1,128 @@
+'use client';
+import { useState, useTransition, useEffect } from 'react';
+import { Header } from '@/components/header';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PokemonSelector } from '@/components/pokemon-selector';
+import { createBattleNarrativeAction } from './actions';
+import { Swords, Loader2 } from 'lucide-react';
+import type { Pokemon, PokemonListItem } from '@/lib/pokemon';
+import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+
+async function getAllPokemon(): Promise<PokemonListItem[]> {
+  const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1302');
+  if (!res.ok) {
+    throw new Error('Failed to fetch pokemon list');
+  }
+  const data = await res.json();
+  return data.results;
+}
+
+export default function BattlePage() {
+  const [pokemon1, setPokemon1] = useState<Pokemon | null>(null);
+  const [pokemon2, setPokemon2] = useState<Pokemon | null>(null);
+  const [narrative, setNarrative] = useState('');
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
+  const [allPokemon, setAllPokemon] = useState<PokemonListItem[]>([]);
+  const [isListLoading, setIsListLoading] = useState(true);
+
+  useEffect(() => {
+    getAllPokemon()
+      .then(setAllPokemon)
+      .catch(() => toast({ title: 'Error', description: 'Could not load Pokémon list for selection.', variant: 'destructive' }))
+      .finally(() => setIsListLoading(false));
+  }, [toast]);
+
+  const handleGenerate = () => {
+    if (!pokemon1 || !pokemon2) {
+      toast({
+        title: 'Selection Error',
+        description: 'Please select two Pokémon to battle.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    startTransition(async () => {
+      setNarrative('');
+      const result = await createBattleNarrativeAction(pokemon1, pokemon2);
+      if (result.error) {
+        toast({
+          title: 'Generation Error',
+          description: result.error,
+          variant: 'destructive',
+        });
+      } else {
+        setNarrative(result.narrative || '');
+      }
+    });
+  };
+
+  const PokemonDisplay = ({ pokemon }: { pokemon: Pokemon | null }) => (
+    <div className="flex-1 flex flex-col items-center justify-center p-4 border rounded-lg min-h-64 bg-muted/50">
+      {pokemon ? (
+        <>
+          <Image src={pokemon.sprites.other['official-artwork'].front_default} alt={pokemon.name} width={128} height={128} />
+          <h3 className="text-xl font-bold capitalize font-headline mt-2">{pokemon.name}</h3>
+        </>
+      ) : (
+        <div className="text-center text-muted-foreground">
+            <Skeleton className="w-32 h-32 rounded-full mx-auto" />
+            <Skeleton className="w-40 h-6 mt-4 mx-auto" />
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <Header />
+      <main className="flex-1 py-8">
+        <div className="container max-w-4xl space-y-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold font-headline">AI Battle Simulator</h1>
+            <p className="text-muted-foreground mt-2">Select two Pokémon and watch the AI generate an epic battle story!</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold font-headline text-center md:text-left">Challenger 1</h2>
+              <PokemonSelector pokemonList={allPokemon} selectedPokemon={pokemon1} onSelectPokemon={setPokemon1} isLoading={isListLoading} />
+            </div>
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold font-headline text-center md:text-left">Challenger 2</h2>
+              <PokemonSelector pokemonList={allPokemon} selectedPokemon={pokemon2} onSelectPokemon={setPokemon2} disabled={!pokemon1} isLoading={isListLoading} />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-4 md:gap-8">
+            <PokemonDisplay pokemon={pokemon1} />
+            <Swords className="w-12 h-12 md:w-16 md:h-16 text-primary shrink-0" />
+            <PokemonDisplay pokemon={pokemon2} />
+          </div>
+
+          <div className="text-center">
+            <Button size="lg" onClick={handleGenerate} disabled={isPending || !pokemon1 || !pokemon2} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Swords className="mr-2 h-4 w-4" />}
+              Generate Battle
+            </Button>
+          </div>
+
+          {narrative && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl">The Epic Battle</CardTitle>
+              </CardHeader>
+              <CardContent className="whitespace-pre-wrap text-lg leading-relaxed font-body">
+                {narrative}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
