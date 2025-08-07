@@ -69,17 +69,19 @@ const EvolutionGraph = ({ evolutionChain }: EvolutionGraphProps) => {
             if (isBranching) {
                 // Special layout for branching evolutions like Eevee
                 const centerX = 350;
-                const centerY = 150;
-                const radius = 300;
+                const centerY = 0;
+                const horizontalSpacing = 200;
                 
                 // Root node
                 processNode(node, centerX, centerY);
 
-                const angleStep = (2 * Math.PI) / node.evolves_to.length;
-                node.evolves_to.forEach((evo, index) => {
-                    const angle = angleStep * index - (Math.PI / 2); // Start from the top
-                    const x = centerX + radius * Math.cos(angle);
-                    const y = centerY + radius * Math.sin(angle);
+                const evolutions = node.evolves_to;
+                const totalWidth = (evolutions.length - 1) * horizontalSpacing;
+                const startX = centerX - totalWidth / 2;
+
+                evolutions.forEach((evo, index) => {
+                    const x = startX + index * horizontalSpacing;
+                    const y = centerY + 250;
                     processNode(evo, x, y, node.species.name);
                 });
 
