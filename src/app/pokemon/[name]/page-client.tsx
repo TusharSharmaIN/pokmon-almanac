@@ -39,67 +39,46 @@ const EvolutionGraph = ({ evolutionChain }: EvolutionGraphProps) => {
     const [elements, setElements] = React.useState<Elements>([]);
 
     React.useEffect(() => {
-        const getElements = (node: EvolutionNode): Elements => {
-            const elements: Elements = [];
-            const isBranching = node.evolves_to.length > 1;
-
-            const processNode = (currentNode: EvolutionNode, x: number, y: number, parentId?: string) => {
-                const id = currentNode.species.name;
-                
-                elements.push({
+        const buildElements = (node: EvolutionNode, x = 0, y = 0, parentId?: string): Elements => {
+            const id = node.species.name;
+            const newElements: Elements = [
+                {
                     id,
                     type: 'custom',
-                    data: { label: <EvolutionPokemon name={currentNode.species.name} url={currentNode.species.url} /> },
+                    data: { label: <EvolutionPokemon name={node.species.name} url={node.species.url} /> },
                     position: { x, y },
-                    sourcePosition: Position.Bottom,
-                    targetPosition: Position.Top,
+                },
+            ];
+
+            if (parentId) {
+                newElements.push({
+                    id: `e-${parentId}-${id}`,
+                    source: parentId,
+                    target: id,
+                    animated: true,
+                    markerEnd: { type: MarkerType.ArrowClosed },
+                    style: { stroke: 'hsl(var(--primary))' },
                 });
-
-                if (parentId) {
-                    elements.push({
-                        id: `e${parentId}-${id}`,
-                        source: parentId,
-                        target: id,
-                        animated: true,
-                        markerEnd: { type: MarkerType.ArrowClosed },
-                    });
-                }
-            };
-            
-            if (isBranching) {
-                // Special layout for branching evolutions like Eevee
-                const centerX = 350;
-                const centerY = 0;
-                const horizontalSpacing = 200;
-                
-                // Root node
-                processNode(node, centerX, centerY);
-
-                const evolutions = node.evolves_to;
-                const totalWidth = (evolutions.length - 1) * horizontalSpacing;
-                const startX = centerX - totalWidth / 2;
-
-                evolutions.forEach((evo, index) => {
-                    const x = startX + index * horizontalSpacing;
-                    const y = centerY + 250;
-                    processNode(evo, x, y, node.species.name);
-                });
-
-            } else {
-                 // Standard vertical layout for linear evolutions
-                const traverse = (currentNode: EvolutionNode, x: number, y: number, parentId?: string) => {
-                    processNode(currentNode, x, y, parentId);
-                    if (currentNode.evolves_to.length > 0) {
-                        traverse(currentNode.evolves_to[0], x, y + 250, currentNode.species.name);
-                    }
-                }
-                traverse(node, 350, 0);
             }
 
-            return elements;
+            if (node.evolves_to && node.evolves_to.length > 0) {
+                const horizontalSpacing = 250;
+                const verticalSpacing = 250;
+                const totalWidth = (node.evolves_to.length - 1) * horizontalSpacing;
+                const startX = x - totalWidth / 2;
+
+                node.evolves_to.forEach((childNode, index) => {
+                    const childX = startX + index * horizontalSpacing;
+                    const childY = y + verticalSpacing;
+                    newElements.push(...buildElements(childNode, childX, childY, id));
+                });
+            }
+
+            return newElements;
         };
 
-        setElements(getElements(evolutionChain));
+        const initialElements = buildElements(evolutionChain, 350, 0);
+        setElements(initialElements);
     }, [evolutionChain]);
 
     return (
@@ -114,6 +93,7 @@ const EvolutionGraph = ({ evolutionChain }: EvolutionGraphProps) => {
                 panOnScroll={true}
                 zoomOnDoubleClick={false}
                 panOnDrag={true}
+                fitView
             >
             </ReactFlow>
         </div>
