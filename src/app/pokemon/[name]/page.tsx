@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import { getPokemon, getPokemonSpecies, getEvolutionChain, EvolutionNode, getPokemonIdFromUrl } from '@/lib/pokemon';
 import { notFound } from 'next/navigation';
@@ -9,7 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import ReactFlow, { Elements, isNode, Position } from 'react-flow-renderer';
+import ReactFlow, { Elements, isNode, Position, ArrowHeadType } from 'react-flow-renderer';
 
 
 const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
@@ -76,136 +78,119 @@ const nodeTypes = {
   custom: CustomNode,
 };
 
-const EvolutionGraph = ({ evolutionChain }: { evolutionChain: EvolutionNode }) => {
-  const [elements, setElements] = React.useState<Elements>([]);
+interface EvolutionGraphProps {
+    evolutionChain: EvolutionNode;
+    initialPokemonName: string;
+}
 
-  React.useEffect(() => {
-    const getElements = (node: EvolutionNode, x = 0, y = 0, parentId?: string): Elements => {
-      const id = node.species.name;
-      const newElements: Elements = [];
-      const isBranching = node.evolves_to.length > 1;
+const EvolutionGraph = ({ evolutionChain, initialPokemonName }: EvolutionGraphProps) => {
+    const [elements, setElements] = React.useState<Elements>([]);
 
-      const currentNode = {
-        id,
-        type: 'custom',
-        data: { label: <EvolutionPokemon name={node.species.name} url={node.species.url} /> },
-        position: { x, y },
-        sourcePosition: isBranching ? Position.Right : Position.Bottom,
-        targetPosition: isBranching ? Position.Left : Position.Top,
-      };
-      newElements.push(currentNode);
+    React.useEffect(() => {
+        const getElements = (node: EvolutionNode, x = 0, y = 0, parentId?: string): Elements => {
+            const id = node.species.name;
+            const newElements: Elements = [];
+            const isRoot = node.species.name === initialPokemonName;
+            const isBranching = node.evolves_to.length > 1;
 
-      if (parentId) {
-        newElements.push({
-          id: `e${parentId}-${id}`,
-          source: parentId,
-          target: id,
-          animated: true,
-          arrowHeadType: 'arrowclosed',
-        });
-      }
-
-      if (isBranching) {
-        const angleStep = 360 / node.evolves_to.length;
-        const radius = 300;
-        node.evolves_to.forEach((evolution, index) => {
-          const angle = angleStep * index;
-          const newX = x + radius * Math.cos((angle * Math.PI) / 180);
-          const newY = y + radius * Math.sin((angle * Math.PI) / 180);
-          newElements.push(...getElements(evolution, newX, newY, id));
-        });
-      } else if (node.evolves_to.length === 1) {
-        newElements.push(...getElements(node.evolves_to[0], x, y + 250, id));
-      }
-
-      return newElements;
-    };
-
-    let initialElements = getElements(evolutionChain);
-
-    if (initialElements.length > 1 && isNode(initialElements[0])) {
-      const firstNode = initialElements[0];
-      if (firstNode.data.label.props.name === evolutionChain.species.name && evolutionChain.evolves_to.length > 1) {
-          // Center the root node for branching evolutions
-          const nodeElements = initialElements.filter(isNode);
-          const xCoords = nodeElements.map(n => n.position.x);
-          const yCoords = nodeElements.map(n => n.position.y);
-          const minX = Math.min(...xCoords);
-          const maxX = Math.max(...xCoords);
-          const minY = Math.min(...yCoords);
-          const maxY = Math.max(...yCoords);
-          const centerX = (minX + maxX) / 2;
-          const centerY = (minY + maxY) / 2;
-          firstNode.position = { x: centerX, y: centerY };
-
-      } else { // Sequential layout
-        initialElements = [];
-        let currentX = 0;
-        const yPos = 100;
-        let parentId: string | undefined = undefined;
-        let currentNodeForLayout: EvolutionNode | undefined = evolutionChain;
-        while(currentNodeForLayout) {
-            const id = currentNodeForLayout.species.name;
-            const node = {
+            const currentNode = {
                 id,
                 type: 'custom',
-                data: { label: <EvolutionPokemon name={id} url={currentNodeForLayout.species.url} /> },
-                position: { x: currentX, y: yPos },
-                sourcePosition: Position.Right,
-                targetPosition: Position.Left,
+                data: { label: <EvolutionPokemon name={node.species.name} url={node.species.url} /> },
+                position: { x, y },
+                sourcePosition: isBranching ? Position.Right : Position.Bottom,
+                targetPosition: isBranching ? Position.Left : Position.Top,
             };
-            initialElements.push(node);
+            newElements.push(currentNode);
+
             if (parentId) {
-                 initialElements.push({
+                newElements.push({
                     id: `e${parentId}-${id}`,
                     source: parentId,
                     target: id,
                     animated: true,
-                    arrowHeadType: 'arrowclosed',
+                    arrowHeadType: ArrowHeadType.ArrowClosed,
                 });
             }
-            parentId = id;
-            currentX += 300;
-            currentNodeForLayout = currentNodeForLayout.evolves_to[0];
+
+            if (isBranching) {
+                 const radius = 300;
+                 const angleStep = 360 / node.evolves_to.length;
+
+                 node.evolves_to.forEach((evolution, index) => {
+                    const angle = angleStep * index - 90; // Start from top
+                    const newX = x + radius * Math.cos((angle * Math.PI) / 180);
+                    const newY = y + radius * Math.sin((angle * Math.PI) / 180);
+                    newElements.push(...getElements(evolution, newX, newY, id));
+                 });
+
+            } else if (node.evolves_to.length === 1) {
+                newElements.push(...getElements(node.evolves_to[0], x, y + 250, id));
+            }
+
+            return newElements;
+        };
+
+        let initialElements = getElements(evolutionChain);
+        
+        // Center the root node for branching evolutions
+        if(isNode(initialElements[0]) && evolutionChain.evolves_to.length > 1) {
+            const rootNode = initialElements.find(el => isNode(el) && el.id === evolutionChain.species.name);
+            const childNodes = evolutionChain.evolves_to.map(evo => initialElements.find(el => isNode(el) && el.id === evo.species.name)).filter(n => n && isNode(n));
+            
+            if(rootNode && isNode(rootNode) && childNodes.length > 0) {
+                 const xCoords = childNodes.map(n => isNode(n) ? n.position.x : 0);
+                 const yCoords = childNodes.map(n => isNode(n) ? n.position.y : 0);
+                 const minX = Math.min(...xCoords);
+                 const maxX = Math.max(...xCoords);
+                 const minY = Math.min(...yCoords);
+                 const maxY = Math.max(...yCoords);
+
+                 rootNode.position = {
+                     x: (minX + maxX) / 2,
+                     y: (minY + maxY) / 2
+                 };
+            }
         }
-      }
-    }
 
+        setElements(initialElements);
+    }, [evolutionChain, initialPokemonName]);
 
-    setElements(initialElements);
-  }, [evolutionChain]);
-
-  return (
-    <div style={{ height: 600 }}>
-       <ReactFlow
-        elements={elements}
-        nodeTypes={nodeTypes}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable={false}
-        zoomOnScroll={false}
-        panOnScroll={true}
-        zoomOnDoubleClick={false}
-        panOnDrag={true}
-        >
-        </ReactFlow>
-    </div>
-  );
+    return (
+        <div style={{ height: 600 }}>
+            <ReactFlow
+                elements={elements}
+                nodeTypes={nodeTypes}
+                nodesDraggable={false}
+                nodesConnectable={false}
+                elementsSelectable={false}
+                zoomOnScroll={false}
+                panOnScroll={true}
+                zoomOnDoubleClick={false}
+                panOnDrag={true}
+            >
+            </ReactFlow>
+        </div>
+    );
 };
 
-export default async function PokemonPage({ params }: { params: { name:string } }) {
-  const pokemon = await getPokemon(params.name.toLowerCase());
-  if (!pokemon) {
-    notFound();
-  }
-  const species = await getPokemonSpecies(pokemon.id);
-  const evolutionChain = await getEvolutionChain(species.evolution_chain.url);
 
+interface PokemonPageProps {
+  params: { name: string };
+}
+
+interface PokemonPageContentProps {
+  pokemon: Pokemon;
+  species: PokemonSpecies;
+  evolutionChain: EvolutionChain;
+  prevPokemon: Pokemon | null;
+  nextPokemon: Pokemon | null;
+}
+
+
+function PokemonPageContent({ pokemon, species, evolutionChain, prevPokemon, nextPokemon }: PokemonPageContentProps) {
   const description =
     species.flavor_text_entries.find((entry) => entry.language.name === 'en')?.flavor_text.replace(/[\n\f]/g, ' ') || 'No description available.';
-
-  const prevPokemon = await getPokemon(pokemon.id - 1);
-  const nextPokemon = await getPokemon(pokemon.id + 1);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -266,7 +251,7 @@ export default async function PokemonPage({ params }: { params: { name:string } 
             {evolutionChain && evolutionChain.chain.evolves_to.length > 0 && (
                <div className="p-4 md:p-8 border-t">
                  <h2 className="text-3xl font-bold mb-4 font-headline text-center">Evolution Chain</h2>
-                 <EvolutionGraph evolutionChain={evolutionChain.chain} />
+                 <EvolutionGraph evolutionChain={evolutionChain.chain} initialPokemonName={evolutionChain.chain.species.name} />
                </div>
             )}
           </Card>
@@ -274,4 +259,53 @@ export default async function PokemonPage({ params }: { params: { name:string } 
       </main>
     </div>
   );
+}
+
+
+export default function PokemonPage({ params }: PokemonPageProps) {
+    const [data, setData] = React.useState<Omit<PokemonPageContentProps, 'params'> | null>(null);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const pokemon = await getPokemon(params.name.toLowerCase());
+                if (!pokemon) {
+                    notFound();
+                    return;
+                }
+                const species = await getPokemonSpecies(pokemon.id);
+                const evolutionChain = await getEvolutionChain(species.evolution_chain.url);
+                const prevPokemon = await getPokemon(pokemon.id - 1);
+                const nextPokemon = await getPokemon(pokemon.id + 1);
+
+                setData({
+                    pokemon,
+                    species,
+                    evolutionChain,
+                    prevPokemon,
+                    nextPokemon
+                });
+            } catch (error) {
+                console.error("Failed to fetch pokemon data", error);
+                // Optionally handle error state here
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [params.name]);
+
+    if (loading) {
+        // You can return a loading skeleton here
+        return <div>Loading...</div>;
+    }
+
+    if (!data) {
+        // This will be handled by notFound() in fetchData, but as a fallback:
+        return <div>Pokemon not found.</div>;
+    }
+    
+    return <PokemonPageContent {...data} />;
 }
