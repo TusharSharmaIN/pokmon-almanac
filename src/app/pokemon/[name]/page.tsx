@@ -151,7 +151,7 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
                         {enrichedEvolutionChain && (
                             <div className="p-4 md:p-8 border-t">
                                 <h2 className="text-3xl font-bold mb-4 font-headline text-center">Evolution Chain</h2>
-                                <PokemonPageClient enrichedEvolutionChain={enrichedEvolutionChain} />
+                                <PokemonPageClient enrichedEvolutionChain={enrichedEvolutionChain} currentPokemonName={pokemon.name} />
                             </div>
                         )}
                     </Card>
