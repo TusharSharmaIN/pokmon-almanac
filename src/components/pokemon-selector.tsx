@@ -23,15 +23,18 @@ interface PokemonSelectorProps {
 
 export function PokemonSelector({ pokemonList, selectedPokemon, onSelectPokemon, disabled, isLoading }: PokemonSelectorProps) {
   const [open, setOpen] = React.useState(false);
+  const [value, setValue] = React.useState('');
 
   const handleSelect = async (currentValue: string) => {
-    if (selectedPokemon?.name.toLowerCase() === currentValue.toLowerCase()) {
+    setValue(currentValue === value ? '' : currentValue);
+    setOpen(false);
+
+    if (currentValue === value) {
         onSelectPokemon(null);
     } else {
         const data = await getPokemon(currentValue);
         onSelectPokemon(data);
     }
-    setOpen(false);
   };
 
   if (isLoading) {
@@ -63,9 +66,7 @@ export function PokemonSelector({ pokemonList, selectedPokemon, onSelectPokemon,
                 <CommandItem
                   key={pokemon.name}
                   value={pokemon.name}
-                  onSelect={() => {
-                    handleSelect(pokemon.name);
-                  }}
+                  onSelect={handleSelect}
                 >
                   <Check className={cn('mr-2 h-4 w-4', selectedPokemon?.name === pokemon.name ? 'opacity-100' : 'opacity-0')} />
                   <span className="capitalize">{pokemon.name}</span>
