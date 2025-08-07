@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { getPokemon, getPokemonSpecies, getEvolutionChain, EvolutionNode, getPokemonIdFromUrl, Pokemon, PokemonSpecies, EvolutionChain as EvolutionChainType, EnrichedEvolutionNode } from '@/lib/pokemon';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import { Header } from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { PokemonPageClient } from './page-client';
+import { PokemonImage } from '@/components/pokemon-image';
 
 
 const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
@@ -92,7 +92,8 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
     const description =
         species.flavor_text_entries.find((entry) => entry.language.name === 'en')?.flavor_text.replace(/[\\n\\f]/g, ' ') || 'No description available.';
 
-    const imageUrl = pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.other.dream_world.front_default;
+    const imageUrl = pokemon.sprites.other['official-artwork'].front_default;
+    const shinyImageUrl = pokemon.sprites.other['official-artwork'].front_shiny;
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -122,11 +123,11 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
 
                     <Card>
                         <div className="grid md:grid-cols-2 gap-4 md:gap-8 p-4 md:p-8">
-                            <div className="flex flex-col items-center">
-                                <div className="bg-muted rounded-lg aspect-square w-full max-w-sm flex items-center justify-center p-8">
-                                <Image src={imageUrl} alt={pokemon.name} width={400} height={400} className="object-contain" priority />
-                                </div>
-                            </div>
+                            <PokemonImage
+                                name={pokemon.name}
+                                defaultUrl={imageUrl}
+                                shinyUrl={shinyImageUrl}
+                            />
                             <div className="space-y-4">
                                 <div className="flex flex-wrap items-baseline gap-4">
                                 <h1 className="text-4xl md:text-5xl font-bold capitalize font-headline">{pokemon.name}</h1>

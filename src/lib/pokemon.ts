@@ -30,6 +30,7 @@ export interface Pokemon {
       };
       'official-artwork': {
         front_default: string;
+        front_shiny: string;
       };
     };
   };
