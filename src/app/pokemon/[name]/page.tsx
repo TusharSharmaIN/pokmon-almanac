@@ -86,7 +86,9 @@ const EvolutionNodeDisplay = ({ node }: { node: EvolutionNode }) => {
               <React.Fragment key={nextNode.species.name}>
                 <div
                   className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primary"
-                  style={{ transform: `translate(${x*0.55}px, ${y*0.55}px) rotate(${angle+90}deg)`}}
+                  style={{
+                    transform: `translate(${x * 0.55}px, ${y * 0.55}px) rotate(${angle + 90}deg)`,
+                  }}
                 >
                   <ArrowRight size={32} />
                 </div>
