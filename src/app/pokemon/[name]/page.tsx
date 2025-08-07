@@ -11,7 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import ReactFlow, { Elements, isNode, Position, ArrowHeadType } from 'react-flow-renderer';
+import ReactFlow, { Elements, isNode, Position, MarkerType } from 'react-flow-renderer';
 
 
 const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
@@ -109,7 +109,7 @@ const EvolutionGraph = ({ evolutionChain, initialPokemonName }: EvolutionGraphPr
                     source: parentId,
                     target: id,
                     animated: true,
-                    arrowHeadType: ArrowHeadType.ArrowClosed,
+                    arrowHeadType: MarkerType.ArrowClosed,
                 });
             }
 
