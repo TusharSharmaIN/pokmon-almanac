@@ -2,15 +2,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { getPokemonIdFromUrl, Pokemon, getPokemon } from '@/lib/pokemon';
 import type { PokemonListItem } from '@/lib/pokemon';
 import { Skeleton } from './ui/skeleton';
 import { TypeBadge } from './type-badge';
-
-interface PokemonCardProps {
-  pokemon: PokemonListItem;
-}
 
 const CardSkeleton = () => (
     <Card className="overflow-hidden">
@@ -57,22 +52,22 @@ export function PokemonCard({ pokemon: pokemonListItem }: PokemonCardProps) {
     <Link href={`/pokemon/${name}`} className="group block">
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary">
         <CardContent className="p-4 bg-secondary/50 aspect-square flex items-center justify-center relative">
+          <div className="absolute top-2 right-2 z-10 text-5xl font-bold text-foreground/10">
+            #{id.padStart(4, '0')}
+          </div>
           <Image
             src={imageUrl}
             alt={name}
             width={200}
             height={200}
-            className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-105"
+            className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-105 z-20"
             data-ai-hint="pokemon character"
             priority={parseInt(id) < 21}
           />
         </CardContent>
         <CardFooter className="p-3 flex justify-between items-center bg-card">
-            <div className="flex flex-col gap-1.5">
-                <h3 className="capitalize font-headline font-semibold text-lg">{name}</h3>
-                <Badge variant="outline">#{id.padStart(4, '0')}</Badge>
-            </div>
-            <div className="flex flex-col items-end gap-1.5">
+            <h3 className="capitalize font-headline font-semibold text-lg">{name}</h3>
+            <div className="flex gap-1.5">
                 {details.types.map((t) => (
                     <TypeBadge key={t.type.name} typeName={t.type.name} />
                 ))}
