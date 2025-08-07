@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { getPokemon, getPokemonSpecies, getEvolutionChain, EvolutionNode, getPokemonIdFromUrl } from '@/lib/pokemon';
+import { getPokemon, getPokemonSpecies, getEvolutionChain, EvolutionNode, getPokemonIdFromUrl, Pokemon, PokemonSpecies, EvolutionChain as EvolutionChainType } from '@/lib/pokemon';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Header } from '@/components/header';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import ReactFlow, { Elements, isNode, Position, MarkerType } from 'react-flow-renderer';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
@@ -90,7 +91,6 @@ const EvolutionGraph = ({ evolutionChain, initialPokemonName }: EvolutionGraphPr
         const getElements = (node: EvolutionNode, x = 0, y = 0, parentId?: string): Elements => {
             const id = node.species.name;
             const newElements: Elements = [];
-            const isRoot = node.species.name === initialPokemonName;
             const isBranching = node.evolves_to.length > 1;
 
             const currentNode = {
@@ -109,7 +109,7 @@ const EvolutionGraph = ({ evolutionChain, initialPokemonName }: EvolutionGraphPr
                     source: parentId,
                     target: id,
                     animated: true,
-                    arrowHeadType: MarkerType.ArrowClosed,
+                    markerEnd: MarkerType.ArrowClosed,
                 });
             }
 
@@ -182,7 +182,7 @@ interface PokemonPageProps {
 interface PokemonPageContentProps {
   pokemon: Pokemon;
   species: PokemonSpecies;
-  evolutionChain: EvolutionChain;
+  evolutionChain: EvolutionChainType;
   prevPokemon: Pokemon | null;
   nextPokemon: Pokemon | null;
 }
@@ -190,7 +190,7 @@ interface PokemonPageContentProps {
 
 function PokemonPageContent({ pokemon, species, evolutionChain, prevPokemon, nextPokemon }: PokemonPageContentProps) {
   const description =
-    species.flavor_text_entries.find((entry) => entry.language.name === 'en')?.flavor_text.replace(/[\n\f]/g, ' ') || 'No description available.';
+    species.flavor_text_entries.find((entry) => entry.language.name === 'en')?.flavor_text.replace(/[\\n\\f]/g, ' ') || 'No description available.';
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -261,6 +261,56 @@ function PokemonPageContent({ pokemon, species, evolutionChain, prevPokemon, nex
   );
 }
 
+const PokemonPageSkeleton = () => (
+    <div className="flex min-h-screen flex-col">
+      <Header />
+      <main className="flex-1 py-8">
+        <div className="container max-w-5xl space-y-8">
+          <div className="relative flex justify-between items-center">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+          <Card>
+            <div className="grid md:grid-cols-2 gap-4 md:gap-8 p-4 md:p-8">
+              <div className="flex flex-col items-center">
+                <Skeleton className="rounded-lg aspect-square w-full max-w-sm" />
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-baseline gap-4">
+                  <Skeleton className="h-12 w-64" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-20 rounded-full" />
+                  <Skeleton className="h-8 w-20 rounded-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+                <Card className="bg-background/50 p-4">
+                   <CardHeader className="p-0 mb-4"><Skeleton className="h-8 w-32" /></CardHeader>
+                   <CardContent className="space-y-4 p-0">
+                     {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="grid grid-cols-4 items-center gap-2">
+                            <Skeleton className="h-6 w-full col-span-1" />
+                            <div className="col-span-3 flex items-center gap-2">
+                                <Skeleton className="h-6 w-10" />
+                                <Skeleton className="h-4 w-full" />
+                            </div>
+                        </div>
+                     ))}
+                   </CardContent>
+                </Card>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </main>
+    </div>
+)
+
 
 export default function PokemonPage({ params }: PokemonPageProps) {
     const [data, setData] = React.useState<Omit<PokemonPageContentProps, 'params'> | null>(null);
@@ -268,6 +318,8 @@ export default function PokemonPage({ params }: PokemonPageProps) {
 
     React.useEffect(() => {
         const fetchData = async () => {
+            setLoading(true);
+            setData(null);
             try {
                 const pokemon = await getPokemon(params.name.toLowerCase());
                 if (!pokemon) {
@@ -275,8 +327,8 @@ export default function PokemonPage({ params }: PokemonPageProps) {
                     return;
                 }
                 const species = await getPokemonSpecies(pokemon.id);
-                const evolutionChain = await getEvolutionChain(species.evolution_chain.url);
-                const prevPokemon = await getPokemon(pokemon.id - 1);
+                const evolutionChain = species.evolution_chain.url ? await getEvolutionChain(species.evolution_chain.url) : null;
+                const prevPokemon = pokemon.id > 1 ? await getPokemon(pokemon.id - 1) : null;
                 const nextPokemon = await getPokemon(pokemon.id + 1);
 
                 setData({
@@ -288,7 +340,7 @@ export default function PokemonPage({ params }: PokemonPageProps) {
                 });
             } catch (error) {
                 console.error("Failed to fetch pokemon data", error);
-                // Optionally handle error state here
+                notFound();
             } finally {
                 setLoading(false);
             }
@@ -298,13 +350,12 @@ export default function PokemonPage({ params }: PokemonPageProps) {
     }, [params.name]);
 
     if (loading) {
-        // You can return a loading skeleton here
-        return <div>Loading...</div>;
+        return <PokemonPageSkeleton />;
     }
 
     if (!data) {
         // This will be handled by notFound() in fetchData, but as a fallback:
-        return <div>Pokemon not found.</div>;
+        return notFound();
     }
     
     return <PokemonPageContent {...data} />;
