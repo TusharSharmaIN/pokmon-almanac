@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ArrowBigRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
@@ -88,7 +88,7 @@ const EvolutionNodeDisplay = ({ node }: { node: EvolutionNode }) => {
                   className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-primary"
                   style={{ transform: `translate(${x*0.55}px, ${y*0.55}px) rotate(${angle+90}deg)`}}
                 >
-                  <ArrowBigRight size={48} />
+                  <ArrowRight size={32} />
                 </div>
                 <div
                   className="absolute top-1/2 left-1/2"
@@ -110,7 +110,7 @@ const EvolutionNodeDisplay = ({ node }: { node: EvolutionNode }) => {
       {hasEvolutions && (
         <>
           <div className="w-8 sm:w-16 mx-2 sm:mx-4 flex justify-center text-primary">
-            <ArrowBigRight size={48} />
+            <ArrowRight size={32} />
           </div>
           <div className="flex flex-col gap-4">
             {node.evolves_to.map((nextNode) => (
