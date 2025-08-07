@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronRight, CornerDownRight } from 'lucide-react';
 import Link from 'next/link';
 
 const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } = {
@@ -49,32 +49,35 @@ const Stat = ({ name, value }: { name: string; value: number }) => (
   </div>
 );
 
-const renderEvolutionChain = (node: EvolutionNode): JSX.Element[] => {
-  const elements = [];
-  let currentNode: EvolutionNode | null = node;
-  while (currentNode) {
-    const id = getPokemonIdFromUrl(currentNode.species.url);
-    const imageUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
-    elements.push(
-      <Link href={`/pokemon/${currentNode.species.name}`} key={currentNode.species.name}>
-        <div className="flex flex-col items-center gap-2 group">
+const EvolutionNodeDisplay = ({ node }: { node: EvolutionNode }) => {
+  const id = getPokemonIdFromUrl(node.species.url);
+  const imageUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+  
+  return (
+    <div className="flex items-center gap-4">
+      <Link href={`/pokemon/${node.species.name}`}>
+        <div className="flex flex-col items-center gap-2 group transform transition-transform duration-300 hover:scale-105">
           <div className="bg-muted rounded-full p-2 sm:p-4 w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center transition-all group-hover:bg-primary/20">
-            <Image src={imageUrl} alt={currentNode.species.name} width={96} height={96} />
+            <Image src={imageUrl} alt={node.species.name} width={96} height={96} />
           </div>
-          <p className="capitalize font-headline font-semibold">{currentNode.species.name}</p>
+          <p className="capitalize font-headline font-semibold">{node.species.name}</p>
         </div>
       </Link>
-    );
 
-    if (currentNode.evolves_to.length > 0) {
-      elements.push(<ChevronRight key={`${currentNode.species.name}-arrow`} className="w-8 h-8 sm:w-12 sm:h-12 text-muted-foreground self-center" />);
-      currentNode = currentNode.evolves_to[0];
-    } else {
-      currentNode = null;
-    }
-  }
-  return elements;
+      {node.evolves_to.length > 0 && (
+        <>
+          <ChevronRight className="w-8 h-8 sm:w-12 sm:h-12 text-muted-foreground shrink-0" />
+          <div className="flex flex-col gap-4">
+            {node.evolves_to.map((nextNode, index) => (
+              <EvolutionNodeDisplay key={nextNode.species.name} node={nextNode} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
 };
+
 
 export default async function PokemonPage({ params }: { params: { name: string } }) {
   const pokemon = await getPokemon(params.name.toLowerCase());
@@ -148,8 +151,8 @@ export default async function PokemonPage({ params }: { params: { name: string }
 
             <div className="p-4 md:p-8 border-t">
               <h2 className="text-3xl font-bold mb-6 font-headline text-center">Evolution Chain</h2>
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8">
-                {renderEvolutionChain(evolutionChain.chain)}
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <EvolutionNodeDisplay node={evolutionChain.chain} />
               </div>
             </div>
           </Card>
