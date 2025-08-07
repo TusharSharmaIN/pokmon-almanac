@@ -55,20 +55,32 @@ const EvolutionPokemon = ({ pokemon }: { pokemon: EnrichedEvolutionNode['pokemon
 };
 
 const EvolutionBranch = ({ node }: { node: EnrichedEvolutionNode }) => {
+  const hasMultipleEvolutions = node.evolves_to.length > 1;
+
   return (
     <div className="flex items-center justify-center gap-4 md:gap-8 flex-wrap">
       <EvolutionPokemon pokemon={node.pokemon} />
       {node.evolves_to.length > 0 && <ArrowRight className="h-8 w-8 text-muted-foreground shrink-0" />}
-      {node.evolves_to.length > 0 && (
-        <div className="flex flex-col gap-4">
+      
+      {hasMultipleEvolutions ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {node.evolves_to.map((evo) => (
             <EvolutionBranch key={evo.pokemon.name} node={evo} />
           ))}
         </div>
+      ) : (
+        node.evolves_to.length > 0 && (
+          <div className="flex flex-col gap-4">
+            {node.evolves_to.map((evo) => (
+              <EvolutionBranch key={evo.pokemon.name} node={evo} />
+            ))}
+          </div>
+        )
       )}
     </div>
   );
 };
+
 
 interface EvolutionGraphProps {
     evolutionChain: EnrichedEvolutionNode;
