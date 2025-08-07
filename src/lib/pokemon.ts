@@ -115,6 +115,31 @@ export const getEvolutionChain = async (url: string): Promise<EvolutionChain> =>
 };
 
 export const getPokemonIdFromUrl = (url: string): string => {
+  if (!url) return '';
   const parts = url.split('/');
   return parts[parts.length - 2];
+};
+
+export interface PokemonType {
+  name: string;
+  url: string;
+}
+
+export const getPokemonTypes = async (): Promise<PokemonType[]> => {
+  const response = await fetch(`${POKEAPI_BASE_URL}/type`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch Pokémon types');
+  }
+  const data = await response.json();
+  // Filter out 'unknown' and 'shadow' types as they are special cases
+  return data.results.filter((type: PokemonType) => type.name !== 'unknown' && type.name !== 'shadow');
+};
+
+export const getPokemonByType = async (typeName: string): Promise<PokemonListItem[]> => {
+  const response = await fetch(`${POKEAPI_BASE_URL}/type/${typeName}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Pokémon of type ${typeName}`);
+  }
+  const data = await response.json();
+  return data.pokemon.map((p: any) => p);
 };
