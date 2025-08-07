@@ -22,9 +22,27 @@ const GenerateBattleNarrativeInputSchema = z.object({
 export type GenerateBattleNarrativeInput = z.infer<typeof GenerateBattleNarrativeInputSchema>;
 
 const GenerateBattleNarrativeOutputSchema = z.object({
-  narrative: z.string().describe('A narrative describing the battle between the two Pokémon.'),
+  winner: z.string().describe('The name of the winning Pokémon.'),
+  loser: z.string().describe('The name of the losing Pokémon.'),
+  outcome: z.string().describe("A short, dramatic summary of the battle's outcome."),
+  events: z
+    .array(
+      z.object({
+        turn: z.number().describe('The turn number of the event.'),
+        action: z
+          .string()
+          .describe(
+            'A fun and interesting description of the action that took place this turn.'
+          ),
+      })
+    )
+    .describe('A turn-by-turn list of the key events in the battle.'),
+  summary: z.string().describe('A final, overall summary of the epic battle.'),
 });
-export type GenerateBattleNarrativeOutput = z.infer<typeof GenerateBattleNarrativeOutputSchema>;
+export type GenerateBattleNarrativeOutput = z.infer<
+  typeof GenerateBattleNarrativeOutputSchema
+>;
+
 
 export async function generateBattleNarrative(
   input: GenerateBattleNarrativeInput
@@ -36,26 +54,25 @@ const prompt = ai.definePrompt({
   name: 'generateBattleNarrativePrompt',
   input: {schema: GenerateBattleNarrativeInputSchema},
   output: {schema: GenerateBattleNarrativeOutputSchema},
-  prompt: `You are a creative storyteller, tasked with generating a battle narrative between two Pokémon.
+  prompt: `You are a play-by-play Pokémon battle commentator. Your task is to generate a detailed and exciting battle narrative between two Pokémon based on their stats and abilities.
 
-  Use the provided stats and abilities to make the battle exciting and plausible.
+Here are the details for Pokémon 1:
+Name: {{{pokemon1Name}}}
+Stats: {{{pokemon1Stats}}}
+Abilities: {{{pokemon1Abilities}}}
 
-  Here are the details for Pokémon 1:
-  Name: {{{pokemon1Name}}}
-  Stats: {{{pokemon1Stats}}}
-  Abilities: {{{pokemon1Abilities}}}
+Here are the details for Pokémon 2:
+Name: {{{pokemon2Name}}}
+Stats: {{{pokemon2Stats}}}
+Abilities: {{{pokemon2Abilities}}}
 
-  Here are the details for Pokémon 2:
-  Name: {{{pokemon2Name}}}
-  Stats: {{{pokemon2Stats}}}
-  Abilities: {{{pokemon2Abilities}}}
-
-  Generate a narrative of at least 100 words describing their epic battle.
-  Focus on making the battle dynamic, and using each pokemons stats and abilities.
-  The narrative should be in the style of a play-by-play commentator describing a real fight.
-  Describe how each pokemon uses its strengths and attempts to overcome its weaknesses.  
-  Add unexpected twists, dramatic moments, and a clear resolution (who wins and how).
-  `,
+Please generate the battle narrative following these rules:
+1.  **Turn-by-Turn Events**: Describe the battle as a series of turns. For each turn, provide a fun and interesting description of the action. Use their stats and abilities to inform the actions.
+2.  **Determine a Winner**: Based on the stats and abilities, decide which Pokémon wins the battle.
+3.  **Outcome**: Write a short, dramatic summary of how the battle concluded.
+4.  **Final Summary**: Provide an overall summary of the epic battle, highlighting key moments.
+5.  **Format**: Ensure your output is a valid JSON object that matches the specified output schema.
+`,
 });
 
 const generateBattleNarrativeFlow = ai.defineFlow(

@@ -5,11 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokemonSelector } from '@/components/pokemon-selector';
 import { createBattleNarrativeAction } from './actions';
-import { Swords, Loader2 } from 'lucide-react';
+import { Swords, Loader2, Trophy, Shield, HeartPulse } from 'lucide-react';
 import type { Pokemon, PokemonListItem } from '@/lib/pokemon';
+import type { GenerateBattleNarrativeOutput } from '@/ai/flows/generate-battle-narrative';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 async function getAllPokemon(): Promise<PokemonListItem[]> {
   const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1302');
@@ -23,7 +26,7 @@ async function getAllPokemon(): Promise<PokemonListItem[]> {
 export default function BattlePage() {
   const [pokemon1, setPokemon1] = useState<Pokemon | null>(null);
   const [pokemon2, setPokemon2] = useState<Pokemon | null>(null);
-  const [narrative, setNarrative] = useState('');
+  const [narrative, setNarrative] = useState<GenerateBattleNarrativeOutput | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const [allPokemon, setAllPokemon] = useState<PokemonListItem[]>([]);
@@ -47,7 +50,7 @@ export default function BattlePage() {
     }
 
     startTransition(async () => {
-      setNarrative('');
+      setNarrative(null);
       const result = await createBattleNarrativeAction(pokemon1, pokemon2);
       if (result.error) {
         toast({
@@ -56,7 +59,7 @@ export default function BattlePage() {
           variant: 'destructive',
         });
       } else {
-        setNarrative(result.narrative || '');
+        setNarrative(result.narrative || null);
       }
     });
   };
@@ -114,10 +117,36 @@ export default function BattlePage() {
           {narrative && (
             <Card>
               <CardHeader>
-                <CardTitle className="font-headline text-2xl">The Epic Battle</CardTitle>
+                <CardTitle className="font-headline text-2xl text-center">The Epic Battle</CardTitle>
               </CardHeader>
-              <CardContent className="whitespace-pre-wrap text-lg leading-relaxed font-body">
-                {narrative}
+              <CardContent className="space-y-6">
+                <div className="text-center space-y-2">
+                    <Trophy className="w-12 h-12 text-yellow-400 mx-auto"/>
+                    <h3 className="text-2xl font-bold capitalize font-headline">{narrative.winner} is victorious!</h3>
+                    <p className="text-muted-foreground text-lg">{narrative.outcome}</p>
+                </div>
+                
+                <Separator />
+
+                <div className="space-y-4">
+                    <h4 className="font-headline text-xl font-bold">Battle Log</h4>
+                    <div className="space-y-4 max-h-96 overflow-y-auto pr-4">
+                        {narrative.events.map((event) => (
+                            <div key={event.turn} className="flex gap-4 items-start">
+                                <Badge variant="secondary" className="text-lg font-bold w-12 h-12 flex items-center justify-center shrink-0 rounded-full">{event.turn}</Badge>
+                                <p className="text-base font-body pt-3">{event.action}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <Separator />
+                
+                <div className="space-y-4">
+                    <h4 className="font-headline text-xl font-bold">Battle Summary</h4>
+                    <p className="text-lg leading-relaxed font-body">{narrative.summary}</p>
+                </div>
+
               </CardContent>
             </Card>
           )}
