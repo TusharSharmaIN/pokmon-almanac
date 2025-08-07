@@ -39,10 +39,20 @@ const POKEMON_TYPE_COLORS_HSL: { [key: string]: { bg: string; text: string } } =
   };
 
 const EvolutionPokemon = ({ pokemon }: { pokemon: EnrichedEvolutionNode['pokemon'] }) => {
+  const [hover, setHover] = React.useState(false);
+  const primaryType = pokemon.types[0].type.name;
+  const typeColor = POKEMON_TYPE_COLORS_HSL[primaryType]?.bg || 'hsl(var(--primary))';
+  
+  // To make the color transparent, we'll extract HSL values and add an alpha.
+  const hoverBgColor = typeColor.replace('hsl(', 'hsla(').replace(')', ', 0.2)');
+
   return (
-    <Link href={`/pokemon/${pokemon.name}`} className="z-10">
+    <Link href={`/pokemon/${pokemon.name}`} className="z-10" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
       <div className="flex flex-col items-center gap-2 group transform transition-transform duration-300 hover:scale-105">
-        <div className="bg-muted rounded-full p-2 sm:p-4 w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center transition-all group-hover:bg-primary/20">
+        <div 
+          className="bg-muted rounded-full p-2 sm:p-4 w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center transition-all"
+          style={{ backgroundColor: hover ? hoverBgColor : undefined }}
+        >
           <Image src={pokemon.sprites.other['official-artwork'].front_default} alt={pokemon.name} width={96} height={96} className="object-contain" />
         </div>
         <p className="capitalize font-headline font-semibold">{pokemon.name}</p>
@@ -63,7 +73,7 @@ const EvolutionBranch = ({ node }: { node: EnrichedEvolutionNode }) => {
       {node.evolves_to.length > 0 && <ArrowRight className="h-8 w-8 text-muted-foreground shrink-0" />}
       
       {hasMultipleEvolutions ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {node.evolves_to.map((evo) => (
             <EvolutionBranch key={evo.pokemon.name} node={evo} />
           ))}
