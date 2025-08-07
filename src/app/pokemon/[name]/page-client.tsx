@@ -4,8 +4,8 @@ import * as React from 'react';
 import { EvolutionNode, getPokemonIdFromUrl } from '@/lib/pokemon';
 import Image from 'next/image';
 import Link from 'next/link';
-import ReactFlow, { Elements, isNode, Position, MarkerType } from 'react-flow-renderer';
-import 'react-flow-renderer/dist/style.css';
+import ReactFlow, { Node, Edge, Position, MarkerType } from 'reactflow';
+import 'reactflow/dist/style.css';
 
 const EvolutionPokemon = ({ name, url }: { name: string; url: string }) => {
   const id = getPokemonIdFromUrl(url);
@@ -36,22 +36,25 @@ interface EvolutionGraphProps {
 }
 
 const EvolutionGraph = ({ evolutionChain }: EvolutionGraphProps) => {
-    const [elements, setElements] = React.useState<Elements>([]);
+    const [nodes, setNodes] = React.useState<Node[]>([]);
+    const [edges, setEdges] = React.useState<Edge[]>([]);
 
     React.useEffect(() => {
-        const buildElements = (node: EvolutionNode, x = 0, y = 0, parentId?: string): Elements => {
+        const newNodes: Node[] = [];
+        const newEdges: Edge[] = [];
+        
+        const buildElements = (node: EvolutionNode, x = 0, y = 0, parentId?: string) => {
             const id = node.species.name;
-            const newElements: Elements = [
-                {
-                    id,
-                    type: 'custom',
-                    data: { label: <EvolutionPokemon name={node.species.name} url={node.species.url} /> },
-                    position: { x, y },
-                },
-            ];
+
+            newNodes.push({
+                id,
+                type: 'custom',
+                data: { label: <EvolutionPokemon name={node.species.name} url={node.species.url} /> },
+                position: { x, y },
+            });
 
             if (parentId) {
-                newElements.push({
+                newEdges.push({
                     id: `e-${parentId}-${id}`,
                     source: parentId,
                     target: id,
@@ -62,29 +65,27 @@ const EvolutionGraph = ({ evolutionChain }: EvolutionGraphProps) => {
             }
 
             if (node.evolves_to && node.evolves_to.length > 0) {
-                const horizontalSpacing = 250;
-                const verticalSpacing = 250;
-                const totalWidth = (node.evolves_to.length - 1) * horizontalSpacing;
-                const startX = x - totalWidth / 2;
-
+                 const totalWidth = (node.evolves_to.length - 1) * 200;
+                 const startX = x - totalWidth / 2;
+                
                 node.evolves_to.forEach((childNode, index) => {
-                    const childX = startX + index * horizontalSpacing;
-                    const childY = y + verticalSpacing;
-                    newElements.push(...buildElements(childNode, childX, childY, id));
+                    buildElements(childNode, startX + index * 200, y + 250, id);
                 });
             }
-
-            return newElements;
         };
 
-        const initialElements = buildElements(evolutionChain, 350, 0);
-        setElements(initialElements);
+        buildElements(evolutionChain, 350, 0);
+        setNodes(newNodes);
+        setEdges(newEdges);
     }, [evolutionChain]);
+
+    if (!nodes.length) return null;
 
     return (
         <div style={{ height: 600 }}>
             <ReactFlow
-                elements={elements}
+                nodes={nodes}
+                edges={edges}
                 nodeTypes={nodeTypes}
                 nodesDraggable={false}
                 nodesConnectable={false}
