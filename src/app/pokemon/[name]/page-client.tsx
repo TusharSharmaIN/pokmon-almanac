@@ -63,7 +63,7 @@ const EvolutionBranch = ({ node }: { node: EnrichedEvolutionNode }) => {
       {node.evolves_to.length > 0 && <ArrowRight className="h-8 w-8 text-muted-foreground shrink-0" />}
       
       {hasMultipleEvolutions ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
           {node.evolves_to.map((evo) => (
             <EvolutionBranch key={evo.pokemon.name} node={evo} />
           ))}
