@@ -4,8 +4,7 @@ import * as React from 'react';
 import { EvolutionNode, getPokemonIdFromUrl } from '@/lib/pokemon';
 import Image from 'next/image';
 import Link from 'next/link';
-import ReactFlow, { Node, Edge, Position, MarkerType } from 'reactflow';
-import 'reactflow/dist/style.css';
+import { ArrowRight } from 'lucide-react';
 
 const EvolutionPokemon = ({ name, url }: { name: string; url: string }) => {
   const id = getPokemonIdFromUrl(url);
@@ -23,12 +22,20 @@ const EvolutionPokemon = ({ name, url }: { name: string; url: string }) => {
   );
 };
 
-const CustomNode = ({ data }: { data: { label: React.ReactNode } }) => {
-  return <>{data.label}</>;
-};
-
-const nodeTypes = {
-  custom: CustomNode,
+const EvolutionBranch = ({ node }: { node: EvolutionNode }) => {
+  return (
+    <div className="flex items-center justify-center gap-4 md:gap-8 flex-wrap">
+      <EvolutionPokemon name={node.species.name} url={node.species.url} />
+      {node.evolves_to.length > 0 && <ArrowRight className="h-8 w-8 text-muted-foreground shrink-0" />}
+      {node.evolves_to.length > 0 && (
+        <div className="flex flex-col gap-4">
+          {node.evolves_to.map((evo) => (
+            <EvolutionBranch key={evo.species.name} node={evo} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 interface EvolutionGraphProps {
@@ -36,67 +43,9 @@ interface EvolutionGraphProps {
 }
 
 const EvolutionGraph = ({ evolutionChain }: EvolutionGraphProps) => {
-    const [nodes, setNodes] = React.useState<Node[]>([]);
-    const [edges, setEdges] = React.useState<Edge[]>([]);
-
-    React.useEffect(() => {
-        const newNodes: Node[] = [];
-        const newEdges: Edge[] = [];
-        
-        const buildElements = (node: EvolutionNode, x = 0, y = 0, parentId?: string) => {
-            const id = node.species.name;
-
-            newNodes.push({
-                id,
-                type: 'custom',
-                data: { label: <EvolutionPokemon name={node.species.name} url={node.species.url} /> },
-                position: { x, y },
-            });
-
-            if (parentId) {
-                newEdges.push({
-                    id: `e-${parentId}-${id}`,
-                    source: parentId,
-                    target: id,
-                    animated: true,
-                    markerEnd: { type: MarkerType.ArrowClosed },
-                    style: { stroke: 'hsl(var(--primary))' },
-                });
-            }
-
-            if (node.evolves_to && node.evolves_to.length > 0) {
-                 const totalWidth = (node.evolves_to.length - 1) * 200;
-                 const startX = x - totalWidth / 2;
-                
-                node.evolves_to.forEach((childNode, index) => {
-                    buildElements(childNode, startX + index * 200, y + 250, id);
-                });
-            }
-        };
-
-        buildElements(evolutionChain, 350, 0);
-        setNodes(newNodes);
-        setEdges(newEdges);
-    }, [evolutionChain]);
-
-    if (!nodes.length) return null;
-
     return (
-        <div style={{ height: 600 }}>
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                nodeTypes={nodeTypes}
-                nodesDraggable={false}
-                nodesConnectable={false}
-                elementsSelectable={false}
-                zoomOnScroll={false}
-                panOnScroll={true}
-                zoomOnDoubleClick={false}
-                panOnDrag={true}
-                fitView
-            >
-            </ReactFlow>
+        <div className="flex items-center justify-center p-4 overflow-x-auto">
+           <EvolutionBranch node={evolutionChain} />
         </div>
     );
 };
