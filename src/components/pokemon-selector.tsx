@@ -25,15 +25,12 @@ export function PokemonSelector({ pokemonList, selectedPokemon, onSelectPokemon,
   const [open, setOpen] = React.useState(false);
 
   const handleSelect = async (currentValue: string) => {
-    // If the selected pokemon is already the current value, do nothing, just close.
-    if (selectedPokemon?.name === currentValue) {
-        setOpen(false);
-        return;
+    if (selectedPokemon?.name.toLowerCase() === currentValue.toLowerCase()) {
+        onSelectPokemon(null);
+    } else {
+        const data = await getPokemon(currentValue);
+        onSelectPokemon(data);
     }
-    
-    // Otherwise, fetch the new pokemon data.
-    const data = await getPokemon(currentValue);
-    onSelectPokemon(data);
     setOpen(false);
   };
 
