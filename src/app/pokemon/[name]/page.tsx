@@ -6,28 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { POKEMON_TYPE_COLORS_HSL, TypeBadge } from '@/components/type-badge';
 import { PokemonPageClient } from './page-client';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-
-const StatDots = ({ name, value, primaryColor }: { name: string; value: number, primaryColor: string }) => {
-  const totalDots = 15; // Max value can be around 255, let's scale it to 15 dots
-  const filledDots = Math.ceil((value / 255) * totalDots);
-
-  return (
-    <div className="grid grid-cols-3 items-center gap-2">
-      <span className="text-sm font-medium capitalize text-muted-foreground col-span-1">{name.replace('special-attack', 'Sp. Atk').replace('special-defense', 'Sp. Def').replace('-', ' ')}</span>
-      <div className="col-span-2 flex items-center gap-1">
-        {Array.from({ length: totalDots }).map((_, i) => (
-          <div
-            key={i}
-            className={cn('w-full h-2 rounded-full', i < filledDots ? '' : 'bg-muted')}
-            style={{ backgroundColor: i < filledDots ? primaryColor : undefined }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
+import { StatsChart } from './stats-chart';
 
 
 async function enrichEvolutionChain(node: EvolutionNode): Promise<EnrichedEvolutionNode | null> {
@@ -138,10 +118,8 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
                            </Card>
                             <Card>
                                 <CardContent className="p-6 space-y-4">
-                                    <h2 className="text-xl font-bold font-headline mb-4">Stats</h2>
-                                    {pokemon.stats.map((s) => (
-                                        <StatDots key={s.stat.name} name={s.stat.name} value={s.base_stat} primaryColor={typeColor.bg} />
-                                    ))}
+                                    <h2 className="text-xl font-bold font-headline mb-4 text-center">Base Stats</h2>
+                                    <StatsChart stats={pokemon.stats} color={typeColor.bg} />
                                 </CardContent>
                             </Card>
                         </div>
