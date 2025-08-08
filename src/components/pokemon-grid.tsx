@@ -164,7 +164,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
               <SelectItem value="all">All Generations</SelectItem>
               {generations.map((gen) => (
                 <SelectItem key={gen.name} value={gen.name} className="capitalize">
-                  {gen.name.replace('generation-','Gen ')}
+                  {`Gen ${gen.name.split('-')[1].toUpperCase()}`}
                 </SelectItem>
               ))}
             </SelectContent>
