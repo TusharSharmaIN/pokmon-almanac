@@ -158,28 +158,28 @@ export const getPokemonByType = async (typeName: string): Promise<PokemonListIte
   return data.pokemon.map((p: any) => p.pokemon);
 };
 
-export interface Generation {
+export interface Pokedex {
     name: string;
     url: string;
 }
 
-export const getGenerations = async (): Promise<Generation[]> => {
-    const response = await fetch(`${POKEAPI_BASE_URL}/generation`);
+export const getPokedexes = async (): Promise<Pokedex[]> => {
+    const response = await fetch(`${POKEAPI_BASE_URL}/pokedex?limit=40`);
     if (!response.ok) {
-        throw new Error('Failed to fetch generations');
+        throw new Error('Failed to fetch pokedexes');
     }
     const data = await response.json();
     return data.results;
 }
 
-export const getPokemonByGeneration = async (generationName: string): Promise<PokemonListItem[]> => {
-    const response = await fetch(`${POKEAPI_BASE_URL}/generation/${generationName}`);
+export const getPokemonByPokedex = async (pokedexName: string): Promise<PokemonListItem[]> => {
+    const response = await fetch(`${POKEAPI_BASE_URL}/pokedex/${pokedexName}`);
     if (!response.ok) {
-        throw new Error(`Failed to fetch Pokémon of generation ${generationName}`);
+        throw new Error(`Failed to fetch Pokémon from pokedex ${pokedexName}`);
     }
     const data = await response.json();
-    return data.pokemon_species.map((p: any) => ({
-      name: p.name,
-      url: p.url.replace('pokemon-species', 'pokemon') // Convert species url to pokemon url
+    return data.pokemon_entries.map((p: any) => ({
+      name: p.pokemon_species.name,
+      url: p.pokemon_species.url.replace('pokemon-species', 'pokemon') // Convert species url to pokemon url
     }));
 }
