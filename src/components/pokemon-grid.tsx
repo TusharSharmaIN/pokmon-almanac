@@ -110,31 +110,36 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
 }
 
 useEffect(() => {
-    const searchPokemon = async () => {
-      if (debouncedSearchTerm) {
-        setIsLoading(true);
-        setNotFound(false);
-        const result = await getPokemon(debouncedSearchTerm.toLowerCase());
-        if (result) {
-          setFilteredPokemon([{ name: result.name, url: `https://pokeapi.co/api/v2/pokemon/${result.id}/` }]);
-          setHasMore(false);
-        } else {
-          setFilteredPokemon([]);
-          setNotFound(true);
-        }
-        setIsLoading(false);
-      } else if (!selectedType && !selectedPokedex) {
-        // When search is cleared, restore the full list if no filters are active
-        setNotFound(false);
+  const searchOrFilter = async () => {
+    if (debouncedSearchTerm) {
+      setIsLoading(true);
+      setNotFound(false);
+      const result = await getPokemon(debouncedSearchTerm.toLowerCase());
+      if (result) {
+        setFilteredPokemon([{ name: result.name, url: `https://pokeapi.co/api/v2/pokemon/${result.id}/` }]);
+        setHasMore(false);
+      } else {
+        setFilteredPokemon([]);
+        setNotFound(true);
+      }
+      setIsLoading(false);
+    } else {
+      setNotFound(false);
+      if (selectedType && selectedType !== 'all') {
+        handleTypeChange(selectedType);
+      } else if (selectedPokedex && selectedPokedex !== 'all') {
+        handlePokedexChange(selectedPokedex);
+      } else {
         setFilteredPokemon(allPokemon);
         setHasMore(true);
       }
-    };
-  
-    searchPokemon();
+    }
+  };
+
+  searchOrFilter();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchTerm, allPokemon, selectedType, selectedPokedex]);
-  
+}, [debouncedSearchTerm, allPokemon]);
+
 
   const formatPokedexName = (name: string) => {
     const cleanedName = name.replace('original-', '').replace('-central', '').replace('-', ' ');
@@ -142,7 +147,16 @@ useEffect(() => {
     if (words.length > 1 && words[0] === 'johto') {
         return 'Johto'; // Special case for 'original johto' -> 'Johto'
     }
-    return cleanedName;
+    if (words.length > 1 && words[0] === 'sinnoh') {
+        return 'Sinnoh';
+    }
+    if (words.length > 1 && words[0] === 'unova') {
+        return 'Unova';
+    }
+    if (words.length > 1 && words[0] === 'alola') {
+        return 'Alola';
+    }
+    return cleanedName.charAt(0).toUpperCase() + cleanedName.slice(1);
   }
 
 
