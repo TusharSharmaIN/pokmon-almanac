@@ -77,7 +77,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
     setSearchTerm('');
     setNotFound(false);
 
-    if (type === 'all') {
+    if (type === 'all' || !type) {
       setFilteredPokemon(allPokemon);
       setHasMore(!!initialPokemon.next);
       return;
@@ -96,7 +96,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
     setSearchTerm('');
     setNotFound(false);
 
-    if (pokedex === 'all') {
+    if (pokedex === 'all' || !pokedex) {
         setFilteredPokemon(allPokemon);
         setHasMore(!!initialPokemon.next);
         return;
@@ -109,36 +109,37 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
     setIsLoading(false);
 }
 
-useEffect(() => {
+  useEffect(() => {
     const searchPokemon = async () => {
-        if (debouncedSearchTerm) {
-            setIsLoading(true);
-            setNotFound(false);
-            const result = await getPokemon(debouncedSearchTerm.toLowerCase());
-            if (result) {
-                setFilteredPokemon([{ name: result.name, url: `https://pokeapi.co/api/v2/pokemon/${result.id}/` }]);
-                setHasMore(false);
-            } else {
-                setFilteredPokemon([]);
-                setNotFound(true);
-            }
-            setIsLoading(false);
+      if (debouncedSearchTerm) {
+        setIsLoading(true);
+        setNotFound(false);
+        const result = await getPokemon(debouncedSearchTerm.toLowerCase());
+        if (result) {
+            setFilteredPokemon([{ name: result.name, url: `https://pokeapi.co/api/v2/pokemon/${result.id}/` }]);
+            setHasMore(false);
         } else {
-            setNotFound(false);
-            // Re-apply filters when search is cleared
-            if (selectedType && selectedType !== 'all') {
-                handleTypeChange(selectedType);
-            } else if (selectedPokedex && selectedPokedex !== 'all') {
-                handlePokedexChange(selectedPokedex);
-            } else {
-                setFilteredPokemon(allPokemon);
-                setHasMore(true);
-            }
+            setFilteredPokemon([]);
+            setNotFound(true);
         }
+        setIsLoading(false);
+      } else {
+        setNotFound(false);
+        // Re-apply filters when search is cleared
+        if (selectedType && selectedType !== 'all') {
+            handleTypeChange(selectedType);
+        } else if (selectedPokedex && selectedPokedex !== 'all') {
+            handlePokedexChange(selectedPokedex);
+        } else {
+            setFilteredPokemon(allPokemon);
+            setHasMore(true);
+        }
+      }
     };
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     searchPokemon();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, allPokemon]);
 
 
   const formatPokedexName = (name: string) => {
