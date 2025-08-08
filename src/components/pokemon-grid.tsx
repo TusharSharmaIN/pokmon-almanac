@@ -110,35 +110,39 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
 }
 
 useEffect(() => {
-  const searchPokemon = async () => {
-    if (debouncedSearchTerm) {
-      setIsLoading(true);
-      setNotFound(false);
-      // Clear other filters when searching
-      setSelectedType('');
-      setSelectedPokedex('');
-      const result = await getPokemon(debouncedSearchTerm.toLowerCase());
-      if (result) {
-        setFilteredPokemon([{ name: result.name, url: `https://pokeapi.co/api/v2/pokemon/${result.id}/` }]);
-        setHasMore(false);
-      } else {
-        setFilteredPokemon([]);
-        setNotFound(true);
-      }
-      setIsLoading(false);
-    } else if (searchTerm === '') { // When search is cleared, restore the full list
+    const searchPokemon = async () => {
+      if (debouncedSearchTerm) {
+        setIsLoading(true);
+        setNotFound(false);
+        const result = await getPokemon(debouncedSearchTerm.toLowerCase());
+        if (result) {
+          setFilteredPokemon([{ name: result.name, url: `https://pokeapi.co/api/v2/pokemon/${result.id}/` }]);
+          setHasMore(false);
+        } else {
+          setFilteredPokemon([]);
+          setNotFound(true);
+        }
+        setIsLoading(false);
+      } else if (!selectedType && !selectedPokedex) {
+        // When search is cleared, restore the full list if no filters are active
         setNotFound(false);
         setFilteredPokemon(allPokemon);
-        setHasMore(!!initialPokemon.next);
-    }
-  };
-
-  searchPokemon();
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, [debouncedSearchTerm]);
+        setHasMore(true);
+      }
+    };
+  
+    searchPokemon();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm, allPokemon, selectedType, selectedPokedex]);
+  
 
   const formatPokedexName = (name: string) => {
-    return name.replace('original-', '').replace('-central', '').replace('-', ' ');
+    const cleanedName = name.replace('original-', '').replace('-central', '').replace('-', ' ');
+    const words = cleanedName.split(' ');
+    if (words.length > 1 && words[0] === 'johto') {
+        return 'Johto'; // Special case for 'original johto' -> 'Johto'
+    }
+    return cleanedName;
   }
 
 
