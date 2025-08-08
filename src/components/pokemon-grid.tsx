@@ -110,35 +110,35 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
 }
 
 useEffect(() => {
-  const searchOrFilter = async () => {
-    if (debouncedSearchTerm) {
-      setIsLoading(true);
-      setNotFound(false);
-      const result = await getPokemon(debouncedSearchTerm.toLowerCase());
-      if (result) {
-        setFilteredPokemon([{ name: result.name, url: `https://pokeapi.co/api/v2/pokemon/${result.id}/` }]);
-        setHasMore(false);
-      } else {
-        setFilteredPokemon([]);
-        setNotFound(true);
-      }
-      setIsLoading(false);
-    } else {
-      setNotFound(false);
-      if (selectedType && selectedType !== 'all') {
-        handleTypeChange(selectedType);
-      } else if (selectedPokedex && selectedPokedex !== 'all') {
-        handlePokedexChange(selectedPokedex);
-      } else {
-        setFilteredPokemon(allPokemon);
-        setHasMore(true);
-      }
-    }
-  };
-
-  searchOrFilter();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [debouncedSearchTerm, allPokemon]);
+    const searchPokemon = async () => {
+        if (debouncedSearchTerm) {
+            setIsLoading(true);
+            setNotFound(false);
+            const result = await getPokemon(debouncedSearchTerm.toLowerCase());
+            if (result) {
+                setFilteredPokemon([{ name: result.name, url: `https://pokeapi.co/api/v2/pokemon/${result.id}/` }]);
+                setHasMore(false);
+            } else {
+                setFilteredPokemon([]);
+                setNotFound(true);
+            }
+            setIsLoading(false);
+        } else {
+            setNotFound(false);
+            // Re-apply filters when search is cleared
+            if (selectedType && selectedType !== 'all') {
+                handleTypeChange(selectedType);
+            } else if (selectedPokedex && selectedPokedex !== 'all') {
+                handlePokedexChange(selectedPokedex);
+            } else {
+                setFilteredPokemon(allPokemon);
+                setHasMore(true);
+            }
+        }
+    };
+    searchPokemon();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [debouncedSearchTerm]);
 
 
   const formatPokedexName = (name: string) => {
