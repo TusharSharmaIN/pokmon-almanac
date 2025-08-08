@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PokemonSelector } from '@/components/pokemon-selector';
 import { createBattleNarrativeAction } from './actions';
-import { Swords, Loader2, Trophy, Shield, HeartPulse } from 'lucide-react';
+import { Swords, Loader2, Trophy } from 'lucide-react';
 import type { Pokemon, PokemonListItem } from '@/lib/pokemon';
 import type { GenerateBattleNarrativeOutput } from '@/ai/flows/generate-battle-narrative';
 import Image from 'next/image';
@@ -114,15 +114,45 @@ export default function BattlePage() {
             </Button>
           </div>
 
-          {narrative && (
+          {isPending && (
             <Card>
               <CardHeader>
-                <CardTitle className="font-headline text-2xl text-center">The Epic Battle</CardTitle>
+                  <Skeleton className="h-8 w-1/2 mx-auto" />
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="text-center space-y-2">
-                    <Trophy className="w-12 h-12 text-yellow-400 mx-auto"/>
-                    <h3 className="text-2xl font-bold capitalize font-headline">{narrative.winner} is victorious!</h3>
+                <div className="flex flex-col items-center space-y-4">
+                    <Skeleton className="w-16 h-16 rounded-full" />
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-6 w-full max-w-sm" />
+                </div>
+                <Separator />
+                <div className="space-y-4">
+                    <Skeleton className="h-6 w-32" />
+                    <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="flex gap-4 items-start">
+                            <Skeleton className="w-12 h-12 rounded-full shrink-0" />
+                            <div className="flex-grow space-y-2 pt-2">
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-4 w-3/4" />
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {narrative && (
+            <Card className="animate-in fade-in-0 slide-in-from-bottom-10 duration-500">
+              <CardHeader>
+                <CardTitle className="font-headline text-3xl text-center">The Epic Battle</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="text-center space-y-2 p-4 bg-muted/50 rounded-lg">
+                    <Trophy className="w-16 h-16 text-yellow-400 mx-auto"/>
+                    <h3 className="text-3xl font-bold capitalize font-headline">{narrative.winner} is victorious!</h3>
                     <p className="text-muted-foreground text-lg">{narrative.outcome}</p>
                 </div>
                 
@@ -130,10 +160,10 @@ export default function BattlePage() {
 
                 <div className="space-y-4">
                     <h4 className="font-headline text-xl font-bold">Battle Log</h4>
-                    <div className="space-y-4 max-h-96 overflow-y-auto pr-4">
+                    <div className="space-y-4 max-h-96 overflow-y-auto pr-4 -mr-4">
                         {narrative.events.map((event) => (
                             <div key={event.turn} className="flex gap-4 items-start">
-                                <Badge variant="secondary" className="text-lg font-bold w-12 h-12 flex items-center justify-center shrink-0 rounded-full">{event.turn}</Badge>
+                                <Badge variant="secondary" className="text-lg font-bold w-12 h-12 flex items-center justify-center shrink-0 rounded-full bg-primary/10 text-primary">{event.turn}</Badge>
                                 <p className="text-base font-body pt-3">{event.action}</p>
                             </div>
                         ))}
