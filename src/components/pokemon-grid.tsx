@@ -2,14 +2,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { PokemonCard } from './pokemon-card';
-import { getPokemonList, getPokemon, PokemonListResponse, PokemonListItem, getPokemonTypes, getPokemonByType, Pokedex, getPokedexes, getPokemonByPokedex } from '@/lib/pokemon';
+import { getPokemonList, PokemonListItem, getPokemonTypes, getPokemonByType, Pokedex, getPokedexes, getPokemonByPokedex } from '@/lib/pokemon';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, ListFilter } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListResponse }) {
+export function PokemonGrid({ initialPokemon }: { initialPokemon: { results: PokemonListItem[], next: string | null } }) {
   const [allPokemon, setAllPokemon] = useState<PokemonListItem[]>(initialPokemon.results);
+  const [fullPokemonList, setFullPokemonList] = useState<PokemonListItem[]>([]);
   const [filteredPokemon, setFilteredPokemon] = useState<PokemonListItem[]>(initialPokemon.results);
   const [searchTerm, setSearchTerm] = useState('');
   const [offset, setOffset] = useState(initialPokemon.results.length);
@@ -42,6 +43,9 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
       ];
       const filteredPokedexes = pokedexesData.filter(p => allowedPokedexes.includes(p.name))
       setPokedexes(filteredPokedexes);
+      // Fetch all pokemon for client-side search
+      const allPokemonData = await getPokemonList(1500, 0);
+      setFullPokemonList(allPokemonData.results);
     };
     fetchData();
   }, []);
@@ -114,9 +118,10 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
       if (debouncedSearchTerm) {
         setIsLoading(true);
         setNotFound(false);
-        const result = await getPokemon(debouncedSearchTerm.toLowerCase());
-        if (result) {
-            setFilteredPokemon([{ name: result.name, url: `https://pokeapi.co/api/v2/pokemon/${result.id}/` }]);
+        const results = fullPokemonList.filter(p => p.name.includes(debouncedSearchTerm.toLowerCase()));
+
+        if (results.length > 0) {
+            setFilteredPokemon(results);
             setHasMore(false);
         } else {
             setFilteredPokemon([]);
@@ -139,7 +144,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     searchPokemon();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchTerm, allPokemon]);
+  }, [debouncedSearchTerm, fullPokemonList]);
 
 
   const formatPokedexName = (name: string) => {
@@ -212,14 +217,15 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {filteredPokemon.map((pokemon, index) => {
+            const key = (pokemon as any).pokemon?.name || pokemon.name;
             if (filteredPokemon.length === index + 1 && !debouncedSearchTerm && !selectedType && !selectedPokedex) {
               return (
-                <div ref={lastPokemonElementRef} key={(pokemon as any).pokemon?.name || pokemon.name}>
+                <div ref={lastPokemonElementRef} key={key}>
                   <PokemonCard pokemon={pokemon} />
                 </div>
               );
             } else {
-              return <PokemonCard key={(pokemon as any).pokemon?.name || pokemon.name} pokemon={pokemon} />;
+              return <PokemonCard key={key} pokemon={pokemon} />;
             }
           })}
           {isLoading &&
