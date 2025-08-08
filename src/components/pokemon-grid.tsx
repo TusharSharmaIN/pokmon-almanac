@@ -28,7 +28,19 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
       const typesData = await getPokemonTypes();
       setTypes(typesData);
       const pokedexesData = await getPokedexes();
-      const filteredPokedexes = pokedexesData.filter(p => !p.name.includes('updated') && !p.name.includes('extended') && !p.name.includes('letsgo') && p.name !== 'national' && !p.name.includes('conquest'))
+      const allowedPokedexes = [
+        'kanto',
+        'original-johto',
+        'hoenn',
+        'original-sinnoh',
+        'original-unova',
+        'kalos-central', // Represents Kalos
+        'original-alola', // Represents Alola
+        'galar',
+        'hisui',
+        'paldea'
+      ];
+      const filteredPokedexes = pokedexesData.filter(p => allowedPokedexes.includes(p.name))
       setPokedexes(filteredPokedexes);
     };
     fetchData();
@@ -125,6 +137,10 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
     searchPokemon();
   }, [debouncedSearchTerm, allPokemon, initialPokemon.next, selectedType, selectedPokedex]);
 
+  const formatPokedexName = (name: string) => {
+    return name.replace('original-', '').replace('-central', '').replace('-', ' ');
+  }
+
 
   return (
     <div className="space-y-8">
@@ -165,7 +181,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
               <SelectItem value="all">All Regions</SelectItem>
               {pokedexes.map((pokedex) => (
                 <SelectItem key={pokedex.name} value={pokedex.name} className="capitalize">
-                  {pokedex.name.replace('-', ' ')}
+                  {formatPokedexName(pokedex.name)}
                 </SelectItem>
               ))}
             </SelectContent>
