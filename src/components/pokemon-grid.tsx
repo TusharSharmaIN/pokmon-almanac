@@ -34,8 +34,8 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
         'hoenn',
         'original-sinnoh',
         'original-unova',
-        'kalos-central', // Represents Kalos
-        'original-alola', // Represents Alola
+        'kalos-central',
+        'original-alola',
         'galar',
         'hisui',
         'paldea'
@@ -114,8 +114,9 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
       if (debouncedSearchTerm) {
         setIsLoading(true);
         setNotFound(false);
-        setSelectedType('');
-        setSelectedPokedex('');
+        // Clearing filters on search was incorrect, so these are removed.
+        // setSelectedType('');
+        // setSelectedPokedex('');
 
         const result = await getPokemon(debouncedSearchTerm.toLowerCase());
         if (result) {
@@ -135,7 +136,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
     };
 
     searchPokemon();
-  }, [debouncedSearchTerm, allPokemon, initialPokemon.next, selectedType, selectedPokedex]);
+  }, [debouncedSearchTerm, allPokemon, initialPokemon.next]);
 
   const formatPokedexName = (name: string) => {
     return name.replace('original-', '').replace('-central', '').replace('-', ' ');
