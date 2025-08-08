@@ -114,6 +114,9 @@ useEffect(() => {
     if (debouncedSearchTerm) {
       setIsLoading(true);
       setNotFound(false);
+      // Clear other filters when searching
+      setSelectedType('');
+      setSelectedPokedex('');
       const result = await getPokemon(debouncedSearchTerm.toLowerCase());
       if (result) {
         setFilteredPokemon([{ name: result.name, url: `https://pokeapi.co/api/v2/pokemon/${result.id}/` }]);
@@ -123,29 +126,16 @@ useEffect(() => {
         setNotFound(true);
       }
       setIsLoading(false);
-    } else {
-      // When search is cleared, restore the previous filter or the full list
-      setNotFound(false);
-      if (selectedType && selectedType !== 'all') {
-        handleTypeChange(selectedType);
-      } else if (selectedPokedex && selectedPokedex !== 'all') {
-        handlePokedexChange(selectedPokedex);
-      } else {
+    } else if (searchTerm === '') { // When search is cleared, restore the full list
+        setNotFound(false);
         setFilteredPokemon(allPokemon);
         setHasMore(!!initialPokemon.next);
-      }
     }
   };
 
-  // We only want this to run when the debounced search term changes.
-  // The other handlers will manage the state when filters change.
-  if (debouncedSearchTerm !== searchTerm) {
-      searchPokemon();
-  } else if (!debouncedSearchTerm && searchTerm === '') {
-      searchPokemon();
-  }
+  searchPokemon();
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [debouncedSearchTerm, allPokemon]);
+}, [debouncedSearchTerm]);
 
   const formatPokedexName = (name: string) => {
     return name.replace('original-', '').replace('-central', '').replace('-', ' ');
