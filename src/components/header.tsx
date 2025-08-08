@@ -8,7 +8,7 @@ export function Header() {
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Dna className="h-6 w-6 text-primary" />
-          <span className="font-headline text-lg font-bold">Pocket Monster Almanac</span>
+          <span className="font-headline text-lg font-bold">Pokemon Almanac</span>
         </Link>
         <nav>
           <Button asChild variant="ghost">

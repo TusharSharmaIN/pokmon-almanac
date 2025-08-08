@@ -50,7 +50,7 @@ export function PokemonCard({ pokemon: pokemonListItem }: { pokemon: PokemonList
 
   return (
     <Link href={`/pokemon/${name}`} className="group block">
-      <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary">
+      <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary hover:-translate-y-1">
         <CardContent className="p-4 bg-secondary/50 aspect-square flex items-center justify-center relative">
           <div className="absolute top-2 right-2 z-10 text-5xl font-bold text-foreground/10">
             #{id.padStart(4, '0')}
@@ -60,7 +60,7 @@ export function PokemonCard({ pokemon: pokemonListItem }: { pokemon: PokemonList
             alt={name}
             width={200}
             height={200}
-            className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-105 z-20"
+            className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-110 z-20"
             data-ai-hint="pokemon character"
             priority={parseInt(id) < 21}
           />

@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Pocket Monster Almanac',
+  title: 'Pokemon Almanac',
   description: 'Your Pokedex and AI Battle Simulator',
 };
 
