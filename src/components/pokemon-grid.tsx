@@ -28,7 +28,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
       const typesData = await getPokemonTypes();
       setTypes(typesData);
       const pokedexesData = await getPokedexes();
-      const filteredPokedexes = pokedexesData.filter(p => !p.name.includes('updated') && !p.name.includes('extended') && p.name !== 'national')
+      const filteredPokedexes = pokedexesData.filter(p => !p.name.includes('updated') && !p.name.includes('extended') && !p.name.includes('letsgo') && p.name !== 'national' && !p.name.includes('conquest'))
       setPokedexes(filteredPokedexes);
     };
     fetchData();
