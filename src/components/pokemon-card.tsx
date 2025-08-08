@@ -20,13 +20,13 @@ const CardSkeleton = () => (
 );
 
 
-export function PokemonCard({ pokemon: pokemonListItem }: PokemonCardProps) {
+export function PokemonCard({ pokemon: pokemonListItem }: { pokemon: PokemonListItem }) {
   const [details, setDetails] = useState<Pokemon | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // The URL can be for a pokemon or a pokemon's slot in a type
-  const url = pokemonListItem.url || (pokemonListItem as any).pokemon?.url;
-  const name = pokemonListItem.name || (pokemonListItem as any).pokemon?.name;
+  const url = pokemonListItem.url;
+  const name = pokemonListItem.name;
   
   const id = getPokemonIdFromUrl(url);
   const imageUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;

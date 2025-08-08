@@ -155,5 +155,31 @@ export const getPokemonByType = async (typeName: string): Promise<PokemonListIte
     throw new Error(`Failed to fetch Pokémon of type ${typeName}`);
   }
   const data = await response.json();
-  return data.pokemon.map((p: any) => p);
+  return data.pokemon.map((p: any) => p.pokemon);
 };
+
+export interface Generation {
+    name: string;
+    url: string;
+}
+
+export const getGenerations = async (): Promise<Generation[]> => {
+    const response = await fetch(`${POKEAPI_BASE_URL}/generation`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch generations');
+    }
+    const data = await response.json();
+    return data.results;
+}
+
+export const getPokemonByGeneration = async (generationName: string): Promise<PokemonListItem[]> => {
+    const response = await fetch(`${POKEAPI_BASE_URL}/generation/${generationName}`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch Pokémon of generation ${generationName}`);
+    }
+    const data = await response.json();
+    return data.pokemon_species.map((p: any) => ({
+      name: p.name,
+      url: p.url.replace('pokemon-species', 'pokemon') // Convert species url to pokemon url
+    }));
+}

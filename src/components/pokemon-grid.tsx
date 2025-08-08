@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { PokemonCard } from './pokemon-card';
-import { getPokemonList, getPokemon, PokemonListResponse, PokemonListItem, getPokemonTypes, getPokemonByType, PokemonType } from '@/lib/pokemon';
+import { getPokemonList, getPokemon, PokemonListResponse, PokemonListItem, getPokemonTypes, getPokemonByType, PokemonType, getGenerations, getPokemonByGeneration, Generation } from '@/lib/pokemon';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, ListFilter } from 'lucide-react';
@@ -19,13 +19,18 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
   const [notFound, setNotFound] = useState(false);
   const [types, setTypes] = useState<PokemonType[]>([]);
   const [selectedType, setSelectedType] = useState<string>('');
+  const [generations, setGenerations] = useState<Generation[]>([]);
+  const [selectedGeneration, setSelectedGeneration] = useState<string>('');
+
 
   useEffect(() => {
-    const fetchTypes = async () => {
+    const fetchData = async () => {
       const typesData = await getPokemonTypes();
       setTypes(typesData);
+      const generationsData = await getGenerations();
+      setGenerations(generationsData);
     };
-    fetchTypes();
+    fetchData();
   }, []);
 
   const observer = useRef<IntersectionObserver>();
@@ -34,13 +39,13 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
       if (isLoading) return;
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore && !debouncedSearchTerm && !selectedType) {
+        if (entries[0].isIntersecting && hasMore && !debouncedSearchTerm && !selectedType && !selectedGeneration) {
           loadMorePokemon();
         }
       });
       if (node) observer.current.observe(node);
     },
-    [isLoading, hasMore, debouncedSearchTerm, selectedType]
+    [isLoading, hasMore, debouncedSearchTerm, selectedType, selectedGeneration]
   );
 
   const loadMorePokemon = async () => {
@@ -55,6 +60,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
   
   const handleTypeChange = async (type: string) => {
     setSelectedType(type);
+    setSelectedGeneration('');
     setSearchTerm('');
     setNotFound(false);
 
@@ -71,12 +77,32 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
     setIsLoading(false);
   }
 
+  const handleGenerationChange = async (generation: string) => {
+    setSelectedGeneration(generation);
+    setSelectedType('');
+    setSearchTerm('');
+    setNotFound(false);
+
+    if (generation === 'all') {
+        setFilteredPokemon(allPokemon);
+        setHasMore(!!initialPokemon.next);
+        return;
+    }
+
+    setIsLoading(true);
+    const byGeneration = await getPokemonByGeneration(generation);
+    setFilteredPokemon(byGeneration);
+    setHasMore(false);
+    setIsLoading(false);
+}
+
   useEffect(() => {
     const searchPokemon = async () => {
       if (debouncedSearchTerm) {
         setIsLoading(true);
         setNotFound(false);
         setSelectedType('');
+        setSelectedGeneration('');
 
         const result = await getPokemon(debouncedSearchTerm.toLowerCase());
         if (result) {
@@ -87,8 +113,8 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
           setNotFound(true);
         }
         setIsLoading(false);
-      } else if (!selectedType) {
-        // Reset to the full list when search is cleared and no type is selected
+      } else if (!selectedType && !selectedGeneration) {
+        // Reset to the full list when search is cleared and no filter is selected
         setFilteredPokemon(allPokemon);
         setHasMore(!!initialPokemon.next);
         setNotFound(false);
@@ -96,7 +122,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
     };
 
     searchPokemon();
-  }, [debouncedSearchTerm, allPokemon, initialPokemon.next, selectedType]);
+  }, [debouncedSearchTerm, allPokemon, initialPokemon.next, selectedType, selectedGeneration]);
 
 
   return (
@@ -128,13 +154,29 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
             </SelectContent>
           </Select>
         </div>
+        <div className="flex-1 md:max-w-[200px]">
+          <Select onValueChange={handleGenerationChange} value={selectedGeneration}>
+            <SelectTrigger className="w-full bg-card focus:border-primary capitalize">
+              <ListFilter className="h-5 w-5 text-muted-foreground mr-2" />
+              <SelectValue placeholder="Generation" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Generations</SelectItem>
+              {generations.map((gen) => (
+                <SelectItem key={gen.name} value={gen.name} className="capitalize">
+                  {gen.name.replace('generation-','Gen ')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       {notFound ? (
          <p className="text-center text-muted-foreground">No Pokémon found for &quot;{debouncedSearchTerm}&quot;.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {filteredPokemon.map((pokemon, index) => {
-            if (filteredPokemon.length === index + 1 && !debouncedSearchTerm && !selectedType) {
+            if (filteredPokemon.length === index + 1 && !debouncedSearchTerm && !selectedType && !selectedGeneration) {
               return (
                 <div ref={lastPokemonElementRef} key={(pokemon as any).pokemon?.name || pokemon.name}>
                   <PokemonCard pokemon={pokemon} />
@@ -153,7 +195,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: PokemonListRes
             ))}
         </div>
       )}
-      {!hasMore && !isLoading && !debouncedSearchTerm && !selectedType && (
+      {!hasMore && !isLoading && !debouncedSearchTerm && !selectedType && !selectedGeneration && (
         <p className="text-center text-muted-foreground">You've caught 'em all!</p>
       )}
     </div>
