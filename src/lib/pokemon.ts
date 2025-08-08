@@ -51,6 +51,8 @@ export interface Pokemon {
     };
     is_hidden: boolean;
   }[];
+  height: number; // in decimeters
+  weight: number; // in hectograms
 }
 
 export const getPokemon = async (nameOrId: string | number): Promise<Pokemon | null> => {
@@ -78,6 +80,12 @@ export interface PokemonSpecies {
   evolution_chain: {
     url: string;
   };
+  genera: {
+    genus: string;
+    language: {
+      name: string;
+    }
+  }[];
 }
 
 export const getPokemonSpecies = async (nameOrId: string | number): Promise<PokemonSpecies> => {
@@ -87,6 +95,12 @@ export const getPokemonSpecies = async (nameOrId: string | number): Promise<Poke
   }
   return response.json();
 };
+
+export function getGenus(species: PokemonSpecies): string {
+    const genusEntry = species.genera.find((g) => g.language.name === 'en');
+    return genusEntry ? genusEntry.genus : 'Unknown';
+}
+
 
 export interface EvolutionNode {
   species: {
