@@ -8,7 +8,16 @@ import { PokemonPageClient } from './page-client';
 import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 import { StatsChart } from './stats-chart';
+import { Variations } from './variations';
 
+function getEvolutionChainNames(node: EnrichedEvolutionNode | null): string[] {
+    if (!node) return [];
+    const names = [node.pokemon.name];
+    node.evolves_to.forEach(evo => {
+        names.push(...getEvolutionChainNames(evo));
+    });
+    return names;
+}
 
 async function enrichEvolutionChain(node: EvolutionNode): Promise<EnrichedEvolutionNode | null> {
     const pokemon = await getPokemon(node.species.name);
@@ -39,6 +48,7 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
     let enrichedEvolutionChain: EnrichedEvolutionNode | null = null;
     let description = 'No description available.';
     let genus = 'Unknown';
+    let alternateForms: { name: string; url: string }[] = [];
 
     try {
         if (pokemon.species.url) {
@@ -56,6 +66,12 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
             description =
                 species.flavor_text_entries.find((entry) => entry.language.name === 'en')?.flavor_text.replace(/[\n\f]/g, ' ') || 'No description available.';
             genus = getGenus(species);
+
+            const evolutionNames = getEvolutionChainNames(enrichedEvolutionChain);
+
+            alternateForms = species.varieties
+                .filter(v => !v.is_default && !evolutionNames.includes(v.pokemon.name))
+                .map(v => v.pokemon);
         }
     } catch (error) {
         console.error("Could not fetch species or evolution data for:", pokemon.name, error);
@@ -148,6 +164,15 @@ export default async function PokemonPage({ params }: PokemonPageProps) {
                             <CardContent className="p-6">
                                 <h2 className="text-3xl font-bold mb-4 font-headline text-center">Evolution Chain</h2>
                                 <PokemonPageClient enrichedEvolutionChain={enrichedEvolutionChain} currentPokemonName={pokemon.name} />
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {alternateForms.length > 0 && (
+                        <Card>
+                            <CardContent className="p-6">
+                                <h2 className="text-3xl font-bold mb-4 font-headline text-center">Alternate Forms</h2>
+                                <Variations forms={alternateForms} />
                             </CardContent>
                         </Card>
                     )}

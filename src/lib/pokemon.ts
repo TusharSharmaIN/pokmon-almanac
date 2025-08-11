@@ -90,6 +90,13 @@ export interface PokemonSpecies {
       name: string;
     }
   }[];
+  varieties: {
+    is_default: boolean;
+    pokemon: {
+      name: string;
+      url: string;
+    };
+  }[];
 }
 
 export const getSpeciesFromUrl = async (url: string): Promise<PokemonSpecies> => {
