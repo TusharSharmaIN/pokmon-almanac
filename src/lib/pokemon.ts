@@ -178,8 +178,11 @@ export const getPokemonByPokedex = async (pokedexName: string): Promise<PokemonL
         throw new Error(`Failed to fetch Pokémon from pokedex ${pokedexName}`);
     }
     const data = await response.json();
-    return data.pokemon_entries.map((p: any) => ({
-      name: p.pokemon_species.name,
-      url: p.pokemon_species.url.replace('pokemon-species', 'pokemon') // Convert species url to pokemon url
-    }));
+    return data.pokemon_entries.map((p: any) => {
+      const id = getPokemonIdFromUrl(p.pokemon_species.url);
+      return {
+        name: p.pokemon_species.name,
+        url: `${POKEAPI_BASE_URL}/pokemon/${id}/`
+      }
+    });
 }
