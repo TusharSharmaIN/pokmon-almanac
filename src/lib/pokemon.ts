@@ -23,6 +23,10 @@ export const getPokemonList = async (limit = 20, offset = 0): Promise<PokemonLis
 export interface Pokemon {
   id: number;
   name: string;
+  species: {
+    name: string;
+    url: string;
+  };
   sprites: {
     other: {
       'dream_world': {
@@ -86,6 +90,14 @@ export interface PokemonSpecies {
       name: string;
     }
   }[];
+}
+
+export const getSpeciesFromUrl = async (url: string): Promise<PokemonSpecies> => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch Pokémon species data from URL');
+  }
+  return response.json();
 }
 
 export const getPokemonSpecies = async (nameOrId: string | number): Promise<PokemonSpecies> => {
