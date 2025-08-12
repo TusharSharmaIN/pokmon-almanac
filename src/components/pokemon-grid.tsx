@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { PokemonCard } from './pokemon-card';
-import { getPokemonList, PokemonListItem, getPokemonTypes, getPokemonByType, Pokedex, getPokedexes, getPokemonByPokedex } from '@/lib/pokemon';
+import { getPokemonList, PokemonListItem, getPokemonTypes, getPokemonByType, Pokedex, getPokedexes, getPokemonByPokedex, getPokemon } from '@/lib/pokemon';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, ListFilter } from 'lucide-react';
@@ -179,7 +179,7 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: { results: Pok
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex-1 md:max-w-[200px]">
+        <div className="flex-1 grid grid-cols-2 gap-4 md:max-w-[416px]">
           <Select onValueChange={handleTypeChange} value={selectedType}>
             <SelectTrigger className="w-full bg-card focus:border-primary capitalize">
               <ListFilter className="h-5 w-5 text-muted-foreground mr-2" />
@@ -194,8 +194,6 @@ export function PokemonGrid({ initialPokemon }: { initialPokemon: { results: Pok
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className="flex-1 md:max-w-[200px]">
           <Select onValueChange={handlePokedexChange} value={selectedPokedex}>
             <SelectTrigger className="w-full bg-card focus:border-primary capitalize">
               <ListFilter className="h-5 w-5 text-muted-foreground mr-2" />
